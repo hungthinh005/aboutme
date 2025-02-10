@@ -1,3 +1,4 @@
+
 # Sample workflow for building and deploying a Jekyll site to GitHub Pages
 name: Deploy Jekyll with GitHub Pages dependencies preinstalled
 
@@ -19,8 +20,8 @@ permissions:
 concurrency:
   group: "pages"
   cancel-in-progress: true
-  
-job:
+
+jobs:
   # Build job
   build:
     runs-on: ubuntu-latest
@@ -30,12 +31,13 @@ job:
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v4
+        uses: actions/jekyll-build-pages@v1
         with:
           source: ./
           destination: ./_site
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
+
   # Deployment job
   deploy:
     environment:
