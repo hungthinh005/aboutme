@@ -2,7 +2,7 @@
 
 <html>
 	<head>
-		<title>Portfolio </title>
+		<title>Phan Hung Thinh | Data Scientist</title>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
@@ -27,6 +27,76 @@
 				padding-bottom: 100px; /* Prevents overlap with footer */
 			}
 		
+			/* Custom styles for project articles */
+			.work-item {
+				display: flex;
+				flex-direction: column;
+				height: 100%;
+				margin-bottom: 2em;
+				padding: 0 1em; /* Add horizontal padding */
+				min-height: 400px; /* Set a minimum height for all cards */
+			}
+			
+			/* Consistent spacing for project content */
+			.work-item > a.image.fit.thumb {
+				margin-bottom: 1em;
+			}
+			
+			.work-item > a:nth-child(2) {
+				margin-bottom: 0.5em;
+			}
+			
+			.work-item p {
+				flex-grow: 1;
+				min-height: 80px; /* Set a minimum height for paragraphs */
+				max-width: 95%; /* Prevent text from extending too far */
+				margin-bottom: 0; /* Remove bottom margin from paragraphs */
+			}
+			.image.fit.thumb {
+				height: 250px; /* Set consistent height for images */
+				overflow: hidden;
+			}
+			.image.fit.thumb img {
+				object-fit: cover;
+				height: 100%;
+				width: 100%;
+			}
+			.actions.special {
+				margin-top: auto;
+			}
+			
+			/* Consistent button positioning */
+			.actions.special {
+				position: relative;
+				bottom: 0;
+				width: 100%;
+				margin-top: 1.5em;
+				text-align: center;
+			}
+			
+			.actions.special .button {
+				min-width: 120px;
+				display: inline-block;
+			}
+			
+			/* Adjust the grid to provide better spacing */
+			#two .row, #three .row {
+				margin: 0 -1.5em;
+				width: calc(100% + 15em);
+			}
+			
+			/* Provide more space between columns */
+			.row > .col-6 {
+				width: 47%; /* Slightly narrower than 50% with spacing */
+				margin: 0 1.5%;
+			}
+			
+			/* Adjust project descriptions */
+			.work-item h3 {
+				margin-bottom: 0.75em;
+				font-size: 1em;
+				line-height: 1.4;
+			}
 		</style>
 	</head>
 	<body class="is-preload">
@@ -44,9 +114,9 @@
 			<!-- One -->
 			<section id="one">
 				<header class="major">
-					<h2>“Nothing Changes if Nothing Changes”<br /></h2>
+					<h2>"Nothing Changes if Nothing Changes"<br /></h2>
 				</header>
-				<p>As a Data Science guy with over a year of hands-on experience in the field, I am passionate about using data to solve complex problems and drive strategic decisions. My expertise spans statistical analysis, machine learning, data visualization, and programming, with a proven ability to transform raw data into actionable insights.</p>
+				<p>As a Data Science guy with one year of hands-on experience in the field, I am passionate about using data to solve complex problems and drive strategic decisions. My expertise spans statistical analysis, machine learning, data visualization, and programming, with a proven ability to transform raw data into actionable insights.</p>
 			</section>	
 			<!-- <section id="cv">
 				<section class="education">
@@ -94,10 +164,19 @@
 				<h2>Recent Projects</h2>
 				<div class="row">
 					<article class="col-6 col-12-xsmall work-item">
+						<a href="images/Multiclass_Classification.png" class="image fit thumb"><img src="images/Multiclass_Classification.png" alt="" /></a>
+						<!-- <a href="https://colab.research.google.com/drive/1hSpGsOc3pOHAMSdvSle02xzpifg3Bovk#scrollTo=q6xDWibJOYwc"> <h3>E-Commerce EDA - Python ↗</h3></a> -->
+						<a href="https://github.com/hungthinh005/python-projects/blob/main/multiclass_classification_CNN.ipynb"> <h3>Multiclass Classification with CNN - Python ↗</h3></a>
+						<p>The project demonstrates how architectural choices significantly impact model performance, with the simpler CNN design achieving better results than the more complex architecture due to the dataset's constraints</p>
+						<ul class="actions special">
+							<li><a href="https://github.com/hungthinh005/python-projects/blob/main/multiclass_classification_CNN.ipynb" class="button small">View Project</a></li>
+						</ul>
+					</article>
+					<article class="col-6 col-12-xsmall work-item">
 						<a href="images/positive_review_words_img.png" class="image fit thumb"><img src="images/positive_review_words_img.png" alt="" /></a>
 						<!-- <a href="https://colab.research.google.com/drive/1hSpGsOc3pOHAMSdvSle02xzpifg3Bovk#scrollTo=q6xDWibJOYwc"> <h3>E-Commerce EDA - Python ↗</h3></a> -->
 						<a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb"> <h3>Customer Review Analysis and Sentiment Prediction - Python ↗</h3></a>
-						<p>Explore my Customer Review Analysis and Sentiment Prediction project, where I leverage Python and machine learning to uncover insights and predict customer sentiments from reviews.</p><br/>
+						<p>Explore my Customer Review Analysis and Sentiment Prediction project, where I leverage Python and machine learning to uncover insights and predict customer sentiments from reviews.</p>
 						<ul class="actions special">
 							<li><a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" class="button small">View Project</a></li>
 						</ul>
@@ -107,7 +186,7 @@
 						<a href="images/E-Commerce_EDA_Thumbnail.png" class="image fit thumb"><img src="images/E-Commerce_EDA_Thumbnail.png" alt="" /></a>
 						<!-- <a href="https://colab.research.google.com/drive/1hSpGsOc3pOHAMSdvSle02xzpifg3Bovk#scrollTo=q6xDWibJOYwc"> <h3>E-Commerce EDA - Python ↗</h3></a> -->
 						<a href="https://deepnote.com/@garizz/E-Commerce-EDA-v2-a87b5ed8-affe-4593-b21f-81cacee1bc3e"> <h3>E - Commerce EDA - Python ↗</h3></a>
-						<p>Performed on the E-Commerce data to explore transactional patterns through RFM Analysis and based on K-Means to cluster customer segments.</p><br/>
+						<p>Performed on the E-Commerce data to explore transactional patterns through RFM Analysis and based on K-Means to cluster customer segments.</p>
 						<ul class="actions special">
 							<li><a href="https://deepnote.com/@garizz/E-Commerce-EDA-v2-a87b5ed8-affe-4593-b21f-81cacee1bc3e" class="button small">View Project</a></li>
 						</ul>
@@ -116,7 +195,7 @@
 					<article class="col-6 col-12-xsmall work-item">
 						<a href="images/Time Series Forecasting_Thumbnail.png" class="image fit thumb"><img src="images/Time Series Forecasting_Thumbnail.png" alt="" /></a>
 						<a href="https://github.com/hungthinh005/python-projects/blob/main/Time%20Series%20Forecasting%20with%20SARIMA.ipynb"> <h3>Time Series Forecasting with SARIMA - Python ↗</h3></a>
-						<p>Using SARIMA regression model to forecast the time series total sales data for the next year with MAPE (Mean Absolute Percentage Error) approximately is 16% </p><br/>
+						<p>Using SARIMA regression model to forecast the time series total sales data for the next year.</p>
 						<ul class="actions special">
 							<li><a href="https://github.com/hungthinh005/python-projects/blob/main/Time%20Series%20Forecasting%20with%20SARIMA.ipynb" class="button small">View Project</a></li>
 						</ul>
@@ -131,14 +210,14 @@
 						</ul>
 					</article> -->
 
-					<article class="col-6 col-12-xsmall work-item">
+					<!-- <article class="col-6 col-12-xsmall work-item">
 						<a href="images/Netflix_Dashboard_Thumbnail.png" class="image fit thumb"><img src="images/Netflix_Dashboard_Thumbnail.png" alt="" /></a>
 						<a href="https://public.tableau.com/views/NetflixEDADashboard/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link"> <h3>Netflix EDA Dashboard - Tableau ↗</h3></a>
 						<p>Performed on Netflix data on Kaggle to explore distribution, user preference behavior, and forecast total movies and TV shows for the next year</p><br/>
 						<ul class="actions special">
 							<li><a href="https://public.tableau.com/views/NetflixEDADashboard/Dashboard1?:language=en-US&:sid=&:redirect=auth&:display_count=n&:origin=viz_share_link" class="button small">View Project</a></li>
 						</ul>
-					</article>
+					</article> -->
 
 				</div>
 			</section>
@@ -150,7 +229,7 @@
 						<a href="images/Song_Recommendation_Engine_Thumbnail.png" class="image fit thumb"><img src="images/Song_Recommendation_Engine_Thumbnail.png" alt="" /></a>
 						<!-- <a href="https://colab.research.google.com/drive/1hSpGsOc3pOHAMSdvSle02xzpifg3Bovk#scrollTo=q6xDWibJOYwc"> <h3>E-Commerce EDA - Python ↗</h3></a> -->
 						<a href="https://song-recommendation.streamlit.app/"> <h3>Song Recommendation Engine - Python ↗</h3></a>
-						<p>This is a Decision Support System Project about recommend songs. Using K-mean to cluster all of the key attributes of songs and give a suggestion setlist relevantly and similar to that cluster. The data used is a piece of data made public by Spotify on Kaggle. </p><br/>
+						<p>This is a Decision Support System Project about recommend songs. Using K-mean to cluster all of the key attributes of songs and give a suggestion setlist relevantly and similar to that cluster. The data used is a piece of data made public by Spotify on Kaggle. </p>
 						<ul class="actions special">
 							<li><a href="https://song-recommendation-engine.streamlit.app/" class="button small">View Project</a></li>
 						</ul>
