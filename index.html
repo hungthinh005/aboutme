@@ -664,6 +664,155 @@
 				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 			}
 
+			/* Certificates Section */
+			.certificates {
+				background: rgba(255, 255, 255, 0.02);
+			}
+
+			.certificates-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+				gap: 25px;
+				margin-top: 50px;
+			}
+
+			.certificate-card {
+				background: var(--card-bg);
+				border-radius: 15px;
+				padding: 25px;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				transition: all 0.3s ease;
+				position: relative;
+				overflow: hidden;
+			}
+
+			.certificate-card:hover {
+				transform: translateY(-5px);
+				box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+			}
+
+			.certificate-card::before {
+				content: '';
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 4px;
+				background: var(--gradient-secondary);
+			}
+
+			.certificate-header {
+				display: flex;
+				align-items: flex-start;
+				margin-bottom: 15px;
+			}
+
+			.certificate-icon {
+				width: 60px;
+				height: 60px;
+				background: white;
+				border-radius: 12px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				margin-right: 15px;
+				padding: 8px;
+				box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+				flex-shrink: 0;
+				border: 2px solid rgba(255, 255, 255, 0.1);
+			}
+
+			.certificate-icon img {
+				width: 100%;
+				height: 100%;
+				object-fit: contain;
+				border-radius: 6px;
+			}
+
+			.certificate-meta h3 {
+				color: var(--secondary-color);
+				font-size: 1.1rem;
+				margin-bottom: 5px;
+				font-weight: 600;
+				line-height: 1.3;
+			}
+
+			.certificate-issuer {
+				color: rgba(255, 255, 255, 0.7);
+				font-size: 0.9rem;
+				margin-bottom: 3px;
+				font-weight: 500;
+			}
+
+			.certificate-date {
+				color: rgba(255, 255, 255, 0.6);
+				font-size: 0.85rem;
+				font-weight: 500;
+			}
+
+			.certificate-description {
+				color: rgba(255, 255, 255, 0.8);
+				line-height: 1.5;
+				margin-bottom: 15px;
+				font-size: 0.9rem;
+			}
+
+			.certificate-skills {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-bottom: 15px;
+			}
+
+			.skill-badge {
+				background: rgba(243, 156, 18, 0.1);
+				color: var(--secondary-color);
+				padding: 4px 10px;
+				border-radius: 12px;
+				font-size: 0.75rem;
+				font-weight: 500;
+				border: 1px solid rgba(243, 156, 18, 0.3);
+			}
+
+			.certificate-actions {
+				display: flex;
+				gap: 10px;
+				margin-top: 15px;
+			}
+
+			.cert-btn {
+				padding: 8px 15px;
+				border: 1px solid var(--secondary-color);
+				color: var(--secondary-color);
+				background: transparent;
+				border-radius: 20px;
+				font-size: 0.8rem;
+				font-weight: 500;
+				text-decoration: none;
+				transition: all 0.3s ease;
+				display: flex;
+				align-items: center;
+				gap: 5px;
+			}
+
+			.cert-btn:hover {
+				background: var(--secondary-color);
+				color: white;
+				transform: translateY(-2px);
+			}
+
+			.cert-btn.verify {
+				border-color: var(--primary-color);
+				color: var(--primary-color);
+			}
+
+			.cert-btn.verify:hover {
+				background: var(--primary-color);
+				color: white;
+			}
+
+
+
 			/* Projects Section */
 			.projects-filter {
 				display: flex;
@@ -1033,6 +1182,20 @@
 					grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
 				}
 
+				.certificates-grid {
+					grid-template-columns: 1fr;
+				}
+
+				.certificate-actions {
+					flex-direction: column;
+					gap: 8px;
+				}
+
+				.cert-btn {
+					text-align: center;
+					justify-content: center;
+				}
+
 				.section {
 					padding: 60px 0;
 				}
@@ -1083,6 +1246,7 @@
 					<li><a href="#about" class="nav-link">About</a></li>
 					<li><a href="#experience" class="nav-link">Experience</a></li>
 					<li><a href="#education" class="nav-link">Education</a></li>
+					<li><a href="#certificates" class="nav-link">Certificates</a></li>
 					<li><a href="#projects" class="nav-link">Projects</a></li>
 					<li><a href="#contact" class="nav-link">Contact</a></li>
 				</ul>
@@ -1420,6 +1584,121 @@
 				</div>
 			</section>
 
+			<!-- Certificates Section -->
+			<section id="certificates" class="certificates section animate-on-scroll">
+				<h2 class="section-title">Certificates</h2>
+				<p class="section-subtitle">Professional certifications and continuous learning</p>
+				<div class="certificates-grid">
+					<!-- Certificate 1 -->
+					<div class="certificate-card">
+						<div class="certificate-header">
+							<div class="certificate-icon">
+								<img src="https://images.credly.com/size/680x680/images/9c380126-9170-46a7-a8b6-1e82f8314c50/blob" alt="WorldQuant University Logo">
+							</div>
+							<div class="certificate-meta">
+								<h3>Applied AI Lab: Deep Learning for Computer Vision</h3>
+								<div class="certificate-issuer">
+									WorldQuant University
+								</div>
+								<div class="certificate-date">Issued: June 2025</div>
+							</div>
+						</div>
+						<div class="certificate-description">
+							Gained hands-on experience in data preparation, deep learning (MLPs, CNNs, transformers), and tasks such as image classification, object detection, and generative AI, while applying transfer learning, exploring AI libraries, and addressing ethical and environmental issues in AI development.
+						</div>
+						<div class="certificate-skills">
+							<span class="skill-badge">Deep Learning</span>
+							<span class="skill-badge">Machine Learning</span>
+							<span class="skill-badge">Image Classification</span>
+							<span class="skill-badge">Object Detection</span>
+						</div>
+						<div class="certificate-actions">
+							<a href="https://www.credly.com/badges/706524ad-62cd-4a25-aee8-6257233c0e52/public_url" class="cert-btn">
+								<i class="fas fa-download"></i> View Certificate
+							</a>
+						</div>
+						<style>
+							.certificate-actions {
+								display: flex;
+								justify-content: flex-end;
+								align-items: flex-end;
+								height: 100%;
+								min-height: 48px;
+								margin-top: auto;
+							}
+							.certificate-card {
+								display: flex;
+								flex-direction: column;
+								height: 100%;
+							}
+						</style>
+					</div>
+
+					<!-- Certificate 2 -->
+					<div class="certificate-card">
+						<div class="certificate-header">
+							<div class="certificate-icon">
+								<img src="https://logos-world.net/wp-content/uploads/2020/09/Google-Symbol.png" alt="Google Logo">
+							</div>
+							<div class="certificate-meta">
+								<h3>Google Data Analytics Professional Certificate</h3>
+								<div class="certificate-issuer">
+									Google (Coursera)
+								</div>
+								<div class="certificate-date">Issued: April 2022</div>
+							</div>
+						</div>
+						<div class="certificate-description">
+							Comprehensive program covering data analysis process, tools, and techniques including data cleaning, visualization, and statistical analysis.
+						</div>
+						<div class="certificate-skills">
+							<span class="skill-badge">Data Analysis</span>
+							<span class="skill-badge">SQL</span>
+							<span class="skill-badge">Python</span>
+							<span class="skill-badge">Data Visualization</span>
+							<span class="skill-badge">Data Analysis</span>
+						</div>
+						<div class="certificate-actions" style="position: relative; z-index: 2;">
+							<a href="https://www.coursera.org/account/accomplishments/specialization/certificate/L2XUM6G9G6S5" class="cert-btn" target="_blank" rel="noopener" style="position: relative; z-index: 3;">
+								<i class="fas fa-download"></i> View Certificate
+							</a>
+						</div>
+					</div>
+
+					<!-- Certificate 3 -->
+					<div class="certificate-card">
+						<div class="certificate-header">
+							<div class="certificate-icon">
+								<img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/http://coursera-university-assets.s3.amazonaws.com/c0/87a10033a311e892619b85c6fd62bb/IBM-200x48.png?auto=format%2Ccompress&dpr=2&h=45" alt="IBM Logo">
+							</div>
+							<div class="certificate-meta">
+								<h3>BI Foundations with SQL, ETL and Data Warehousing</h3>
+								<div class="certificate-issuer">
+									IBM (Coursera)
+								</div>
+								<div class="certificate-date">Issued: July 2022</div>
+							</div>
+						</div>
+						<div class="certificate-description">
+							Gained foundational skills in Linux commands and shell scripting, SQL for data analysis, and building ETL and data pipelines using tools like Airflow and Kafka. Also developed a strong understanding of data warehouse concepts and architecture.
+						</div>
+						<div class="certificate-skills">
+							<span class="skill-badge">Extract, Transform, Load</span>
+							<span class="skill-badge">Data Warehousing</span>
+							<span class="skill-badge">Python</span>
+							<span class="skill-badge">Data Pipelines</span>
+							<span class="skill-badge">Databases</span>
+						</div>
+						<div class="certificate-actions">
+							<a href="https://www.coursera.org/account/accomplishments/specialization/certificate/5DQPZZE9RV6V" class="cert-btn">
+								<i class="fas fa-download"></i> View Certificate
+							</a>
+						</div>
+					</div>
+				</div>
+			</section>
+	
+
 			<!-- Projects Section -->
 			<section id="projects" class="projects section animate-on-scroll">
 				<h2 class="section-title">Featured Projects</h2>
@@ -1431,8 +1710,36 @@
 					<button class="filter-btn" data-filter="analysis">Data Analysis</button>
 					<button class="filter-btn" data-filter="visualization">Visualization</button>
 				</div>
-				
 				<div class="projects-grid">
+					<div class="project-card" data-category="ml">
+						<div class="project-image">
+							<img src="images/GMV_Forecasting_Weighted_Hybrid_model.png" alt="GMV Forecasting with a Weighted Hybrid Model (SARIMAX + Prophet)" />
+							<div class="project-overlay">
+								<div class="project-links">
+									<a href="https://github.com/hungthinh005/python-projects/blob/main/GMV%20Forecasting%20with%20a%20Weighted%20Hybrid%20Model%20(SARIMAX%20%2B%20Prophet).ipynb" target="_blank">
+										<i class="fab fa-github"></i>
+									</a>
+									<a href="https://github.com/hungthinh005/python-projects/blob/main/GMV%20Forecasting%20with%20a%20Weighted%20Hybrid%20Model%20(SARIMAX%20%2B%20Prophet).ipynb" target="_blank">
+										<i class="fas fa-external-link-alt"></i>
+									</a>
+								</div>
+							</div>
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">GMV Forecasting with a Weighted Hybrid Model (SARIMAX + Prophet)</h3>
+							<p class="project-description">
+								Developed a weighted hybrid model combining SARIMAX and Prophet to forecast GMV, leveraging both models for improved accuracy in time series prediction.
+							</p>
+							<div class="project-tech">
+								<span class="tech-tag">Python</span>
+								<span class="tech-tag">SARIMAX</span>
+								<span class="tech-tag">Prophet</span>
+								<span class="tech-tag">Time Series Forecasting</span>
+								<span class="tech-tag">Weighted Hybrid Model</span>
+							</div>
+						</div>
+					</div>
+					
 					<div class="project-card" data-category="ml">
 						<div class="project-image">
 							<img src="images/Multiclass_Classification.png" alt="Multiclass Classification with CNN" />
@@ -1461,33 +1768,6 @@
 						</div>
 					</div>
 					
-					<div class="project-card" data-category="analysis ml">
-						<div class="project-image">
-							<img src="images/positive_review_words_img.png" alt="Customer Review Analysis" />
-							<div class="project-overlay">
-								<div class="project-links">
-									<a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" target="_blank">
-										<i class="fab fa-github"></i>
-									</a>
-									<a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" target="_blank">
-										<i class="fas fa-external-link-alt"></i>
-									</a>
-								</div>
-							</div>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">Customer Review Analysis & Sentiment Prediction</h3>
-							<p class="project-description">
-								Leverages Python and machine learning to uncover insights and predict customer sentiments from reviews using NLP techniques and sentiment analysis.
-							</p>
-							<div class="project-tech">
-								<span class="tech-tag">Python</span>
-								<span class="tech-tag">NLP</span>
-								<span class="tech-tag">Scikit-learn</span>
-								<span class="tech-tag">Sentiment Analysis</span>
-							</div>
-						</div>
-					</div>
 
 					<div class="project-card" data-category="ml">
 						<div class="project-image">
@@ -1541,34 +1821,34 @@
 							</div>
 						</div>
 					</div>
-					
-					<div class="project-card" data-category="ml">
+					<div class="project-card" data-category="analysis ml">
 						<div class="project-image">
-							<img src="images/Time Series Forecasting_Thumbnail.png" alt="Time Series Forecasting" />
+							<img src="images/positive_review_words_img.png" alt="Customer Review Analysis" />
 							<div class="project-overlay">
 								<div class="project-links">
-									<a href="https://github.com/hungthinh005/python-projects/blob/main/Time%20Series%20Forecasting%20with%20SARIMA.ipynb" target="_blank">
+									<a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" target="_blank">
 										<i class="fab fa-github"></i>
 									</a>
-									<a href="https://github.com/hungthinh005/python-projects/blob/main/Time%20Series%20Forecasting%20with%20SARIMA.ipynb" target="_blank">
+									<a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" target="_blank">
 										<i class="fas fa-external-link-alt"></i>
 									</a>
 								</div>
 							</div>
 						</div>
 						<div class="project-content">
-							<h3 class="project-title">Time Series Forecasting with SARIMA</h3>
+							<h3 class="project-title">Customer Review Analysis & Sentiment Prediction</h3>
 							<p class="project-description">
-								Using SARIMA regression model to forecast time series total sales data for the next year, including seasonal decomposition and trend analysis.
+								Leverages Python and machine learning to uncover insights and predict customer sentiments from reviews using NLP techniques and sentiment analysis.
 							</p>
 							<div class="project-tech">
 								<span class="tech-tag">Python</span>
-								<span class="tech-tag">SARIMA</span>
-								<span class="tech-tag">Time Series</span>
-								<span class="tech-tag">Forecasting</span>
+								<span class="tech-tag">NLP</span>
+								<span class="tech-tag">Scikit-learn</span>
+								<span class="tech-tag">Sentiment Analysis</span>
 							</div>
 						</div>
 					</div>
+
 					
 	
 				</div>
