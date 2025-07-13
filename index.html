@@ -424,9 +424,10 @@
 				border-radius: 50%;
 				background: var(--primary-color);
 				position: absolute;
-				left: 0%;
+				left: -5%;
 				transform: translateX(-50%);
 				z-index: 2;
+				top: 15px;
 			}
 
 			/* Company-specific timeline dots */
@@ -1079,8 +1080,32 @@
 				transform: translateY(0);
 			}
 
+			/* Timeline fixes for all screen sizes below 1024px */
+			@media (max-width: 500px) {
+				.timeline {
+					padding-left: 30px;
+				}
+				
+				.timeline::before {
+					left: 16px;
+					transform: translateX(-50%);
+				}
+				
+				.timeline-dot {
+					width: 20px;
+					height: 20px;
+					border-radius: 50%;
+					background: var(--primary-color);
+					position: absolute;
+					left: -5%;
+					transform: translateX(-50%);
+					z-index: 2;
+					top: 15px;
+				}
+			}
+
 			/* Responsive Design */
-			@media (max-width: 768px) {
+			@media (max-width: 500px) {
 				.nav-menu {
 					position: fixed;
 					top: 70px;
@@ -1121,16 +1146,6 @@
 				}
 
 				/* Mobile Timeline Fix */
-				.timeline {
-					position: relative;
-					padding-left: 40px;
-				}
-
-				.timeline::before {
-					left: 20px;
-					transform: translateX(-50%);
-				}
-
 				.timeline-item {
 					display: block;
 					position: relative;
@@ -1159,10 +1174,7 @@
 				}
 
 				.timeline-dot {
-					left: -20px;
-					transform: translateX(-50%);
-					position: absolute;
-					top: 6px;
+					top: 9px;
 					z-index: 10;
 				}
 
@@ -1212,7 +1224,7 @@
 				}
 			}
 
-			@media (max-width: 480px) {
+			@media (max-width: 500px) {
 				.nav-container {
 					padding: 0 15px;
 				}
