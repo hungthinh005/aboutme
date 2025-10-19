@@ -7,6 +7,8 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 		<link rel="stylesheet" href="assets/css/main.css" />
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+		<!-- Prism.js Dark Theme -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css">
 		<style>
 			:root {
 				--primary-color: #4a90e2;
@@ -1054,6 +1056,33 @@
 				color: var(--accent-color);
 			}
 
+			.modal-back-btn {
+				display: inline-flex;
+				align-items: center;
+				gap: 8px;
+				padding: 12px 24px;
+				background: transparent;
+				border: 2px solid var(--primary-color);
+				color: var(--primary-color);
+				text-decoration: none !important;
+				border-radius: 25px;
+				font-weight: 600;
+				transition: all 0.3s ease;
+				cursor: pointer;
+				font-size: 1rem;
+			}
+
+			.modal-back-btn:hover {
+				background: var(--primary-color);
+				color: white;
+				transform: translateY(-2px);
+				text-decoration: none !important;
+			}
+
+			.modal-back-btn i {
+				font-size: 1rem;
+			}
+
 			.modal-title {
 				font-size: 2rem;
 				color: var(--primary-color);
@@ -1152,8 +1181,16 @@
 
 			.modal-links {
 				display: flex;
+				justify-content: space-between;
+				align-items: center;
 				gap: 15px;
 				margin-top: 30px;
+				flex-wrap: wrap;
+			}
+
+			.modal-links-left {
+				display: flex;
+				gap: 15px;
 				flex-wrap: wrap;
 			}
 
@@ -1192,6 +1229,260 @@
 			.modal-link.secondary:hover {
 				background: var(--primary-color);
 				color: white;
+			}
+
+			/* Code Viewer Section */
+			.modal-code-section {
+				margin-top: 30px;
+			}
+
+			.code-section-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				cursor: pointer;
+				user-select: none;
+				padding: 15px 20px;
+				background: rgba(74, 144, 226, 0.05);
+				border-radius: 10px;
+				margin-bottom: 15px;
+				transition: all 0.3s ease;
+				border: 1px solid rgba(74, 144, 226, 0.1);
+			}
+
+			.code-section-header:hover {
+				background: rgba(74, 144, 226, 0.1);
+				border-color: rgba(74, 144, 226, 0.3);
+			}
+
+			.code-section-header:hover h3 {
+				color: var(--secondary-color);
+			}
+
+			.code-section-header h3 {
+				margin-bottom: 0;
+			}
+
+			.code-expand-btn {
+				background: rgba(74, 144, 226, 0.1);
+				border: 1px solid var(--primary-color);
+				color: var(--primary-color);
+				padding: 8px 16px;
+				border-radius: 20px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 0.9rem;
+				font-weight: 500;
+			}
+
+			.code-expand-btn:hover {
+				background: var(--primary-color);
+				color: white;
+			}
+
+			.code-expand-btn i {
+				transition: transform 0.3s ease;
+			}
+
+			.code-expand-btn.expanded i {
+				transform: rotate(180deg);
+			}
+
+			.code-content-wrapper {
+				max-height: 0;
+				overflow: hidden;
+				transition: max-height 0.5s ease-out;
+			}
+
+			.code-content-wrapper.expanded {
+				max-height: 3000px;
+				transition: max-height 0.8s ease-in;
+			}
+
+			.code-tabs {
+				display: flex;
+				gap: 10px;
+				margin-bottom: 15px;
+				flex-wrap: wrap;
+			}
+
+			.code-tab {
+				padding: 10px 20px;
+				background: rgba(74, 144, 226, 0.1);
+				border: 1px solid var(--primary-color);
+				border-radius: 8px 8px 0 0;
+				color: var(--primary-color);
+				cursor: pointer;
+				transition: all 0.3s ease;
+				font-size: 0.9rem;
+				font-weight: 500;
+			}
+
+			.code-tab:hover {
+				background: rgba(74, 144, 226, 0.2);
+			}
+
+			.code-tab.active {
+				background: var(--primary-color);
+				color: white;
+			}
+
+			.code-viewer {
+				background: #1e1e1e;
+				border-radius: 0 10px 10px 10px;
+				overflow: hidden;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+			}
+
+			.code-header {
+				background: #0d0d0d;
+				padding: 10px 15px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+			}
+
+			.code-filename {
+				color: rgba(255, 255, 255, 0.7);
+				font-size: 0.85rem;
+				font-family: 'Courier New', monospace;
+			}
+
+			.copy-code-btn {
+				background: rgba(74, 144, 226, 0.2);
+				border: 1px solid var(--primary-color);
+				color: var(--primary-color);
+				padding: 5px 15px;
+				border-radius: 5px;
+				cursor: pointer;
+				font-size: 0.8rem;
+				transition: all 0.3s ease;
+			}
+
+			.copy-code-btn:hover {
+				background: var(--primary-color);
+				color: white;
+			}
+
+			.copy-code-btn.copied {
+				background: #27ae60;
+				border-color: #27ae60;
+				color: white;
+			}
+
+			.code-content {
+				max-height: 500px;
+				overflow-y: auto;
+				padding: 0;
+				background: #1e1e1e;
+			}
+
+			.code-content pre {
+				margin: 0 !important;
+				padding: 20px !important;
+				background: #272822 !important;
+			}
+
+			.code-content pre[class*="language-"] {
+				background: #272822 !important;
+			}
+
+			.code-content code {
+				font-size: 0.85rem;
+				line-height: 1.6;
+				font-family: 'Courier New', Consolas, Monaco, monospace;
+				color: #f8f8f2 !important;
+				background: transparent !important;
+			}
+
+			.code-content code[class*="language-"] {
+				background: transparent !important;
+			}
+
+			/* Override Prism theme if needed */
+			.code-content pre code * {
+				color: inherit;
+			}
+
+			/* Syntax highlighting colors */
+			.code-content .token.comment,
+			.code-content .token.prolog,
+			.code-content .token.doctype,
+			.code-content .token.cdata {
+				color: #8292a2 !important;
+			}
+
+			.code-content .token.punctuation {
+				color: #f8f8f2 !important;
+			}
+
+			.code-content .token.property,
+			.code-content .token.tag,
+			.code-content .token.constant,
+			.code-content .token.symbol,
+			.code-content .token.deleted {
+				color: #f92672 !important;
+			}
+
+			.code-content .token.boolean,
+			.code-content .token.number {
+				color: #ae81ff !important;
+			}
+
+			.code-content .token.selector,
+			.code-content .token.attr-name,
+			.code-content .token.string,
+			.code-content .token.char,
+			.code-content .token.builtin,
+			.code-content .token.inserted {
+				color: #a6e22e !important;
+			}
+
+			.code-content .token.operator,
+			.code-content .token.entity,
+			.code-content .token.url,
+			.code-content .language-css .token.string,
+			.code-content .style .token.string,
+			.code-content .token.variable {
+				color: #f8f8f2 !important;
+			}
+
+			.code-content .token.atrule,
+			.code-content .token.attr-value,
+			.code-content .token.function,
+			.code-content .token.class-name {
+				color: #e6db74 !important;
+			}
+
+			.code-content .token.keyword {
+				color: #66d9ef !important;
+			}
+
+			.code-content .token.regex,
+			.code-content .token.important {
+				color: #fd971f !important;
+			}
+
+			/* Code viewer scrollbar */
+			.code-content::-webkit-scrollbar {
+				width: 10px;
+			}
+
+			.code-content::-webkit-scrollbar-track {
+				background: #0d0d0d;
+			}
+
+			.code-content::-webkit-scrollbar-thumb {
+				background: #4a4a4a;
+				border-radius: 5px;
+			}
+
+			.code-content::-webkit-scrollbar-thumb:hover {
+				background: var(--primary-color);
 			}
 
 			/* Responsive Modal */
@@ -1624,7 +1915,7 @@
 									<div class="skill-dot filled"></div>
 									<div class="skill-dot filled"></div>
 									<div class="skill-dot filled"></div>
-									<div class="skill-dot filled"></div>
+									<div class="skill-dot"></div>
 								</div>
 							</div>
 							<div class="skill-item">
@@ -1658,7 +1949,7 @@
 									<div class="skill-dot filled"></div>
 									<div class="skill-dot filled"></div>
 									<div class="skill-dot filled"></div>
-									<div class="skill-dot filled"></div>
+									<div class="skill-dot"></div>
 								</div>
 							</div>
 							<div class="skill-item">
@@ -1700,7 +1991,7 @@
 								<div class="skill-level">
 									<div class="skill-dot filled"></div>
 									<div class="skill-dot filled"></div>
-									<div class="skill-dot filled"></div>
+									<div class="skill-dot"></div>
 									<div class="skill-dot"></div>
 									<div class="skill-dot"></div>
 								</div>
@@ -1801,8 +2092,8 @@
 				<div class="projects-filter">
 					<button class="filter-btn active" data-filter="all">All Projects</button>
 					<button class="filter-btn" data-filter="ml">Machine Learning</button>
-					<button class="filter-btn" data-filter="analysis">Data Analysis</button>
-					<button class="filter-btn" data-filter="visualization">Visualization</button>
+					<button class="filter-btn" data-filter="analysis">Data Engineering</button>
+					<button class="filter-btn" data-filter="nlp">NLP & Text Analysis</button>
 				</div>
 				<div class="projects-grid">
 					<div class="project-card" data-category="ml" data-project="gmv-forecasting">
@@ -1815,9 +2106,9 @@
 										<a href="https://github.com/hungthinh005/python-projects/blob/main/GMV%20Forecasting%20with%20a%20Weighted%20Hybrid%20Model%20(SARIMAX%20%2B%20Prophet).ipynb" target="_blank" title="GitHub">
 											<i class="fab fa-github"></i>
 										</a>
-										<a href="https://github.com/hungthinh005/python-projects/blob/main/GMV%20Forecasting%20with%20a%20Weighted%20Hybrid%20Model%20(SARIMAX%20%2B%20Prophet).ipynb" target="_blank" title="Live Demo">
+										<!-- <a href="https://github.com/hungthinh005/python-projects/blob/main/GMV%20Forecasting%20with%20a%20Weighted%20Hybrid%20Model%20(SARIMAX%20%2B%20Prophet).ipynb" target="_blank" title="Live Demo">
 											<i class="fas fa-external-link-alt"></i>
-										</a>
+										</a> -->
 									</div>
 								</div>
 							</div>
@@ -1835,6 +2126,38 @@
 							</div>
 						</div>
 					</div>
+
+					<div class="project-card" data-category="analysis" data-project="analytics-engineer">
+						<div class="project-image">
+							<img src="images/dimensional model.jpeg" alt="E-commerce Data Pipeline & Analytics Platform" />
+							<div class="project-overlay">
+								<div class="project-overlay-content">
+									<button class="view-details-btn">Summary</button>
+									<div class="project-links">
+										<a href="https://github.com/hungthinh005/analytics_engineer_project" target="_blank" title="GitHub">
+											<i class="fab fa-github"></i>
+										</a>
+										<!-- <a href="https://github.com/hungthinh005/analytics_engineer_project" target="_blank" title="View Code">
+											<i class="fas fa-external-link-alt"></i>
+										</a> -->
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="project-content">
+							<h3 class="project-title">E-commerce Data Pipeline & Analytics Platform</h3>
+							<p class="project-description">
+								Complete end-to-end data engineering solution with ETL pipelines, data warehousing, and analytics capabilities for an e-commerce platform.
+							</p>
+							<div class="project-tech">
+								<span class="tech-tag">Python</span>
+								<span class="tech-tag">PostgreSQL</span>
+								<span class="tech-tag">Apache Airflow</span>
+								<span class="tech-tag">ETL</span>
+								<span class="tech-tag">Data Warehousing</span>
+							</div>
+						</div>
+					</div>
 					
 					<div class="project-card" data-category="ml" data-project="multiclass-cnn">
 						<div class="project-image">
@@ -1846,9 +2169,9 @@
 										<a href="https://github.com/hungthinh005/python-projects/blob/main/Multiclass%20Classification%20CNN.ipynb" target="_blank" title="GitHub">
 											<i class="fab fa-github"></i>
 										</a>
-										<a href="https://github.com/hungthinh005/python-projects/blob/main/Multiclass%20Classification%20CNN.ipynb" target="_blank" title="View Code">
+										<!-- <a href="https://github.com/hungthinh005/python-projects/blob/main/Multiclass%20Classification%20CNN.ipynb" target="_blank" title="View Code">
 											<i class="fas fa-external-link-alt"></i>
-										</a>
+										</a> -->
 									</div>
 								</div>
 							</div>
@@ -1898,35 +2221,8 @@
 						</div>
 					</div>
 					
-					<!-- <div class="project-card" data-category="analysis" data-project="ecommerce-eda">
-						<div class="project-image">
-							<img src="images/E-Commerce_EDA_Thumbnail.png" alt="E-Commerce EDA" />
-							<div class="project-overlay">
-								<div class="project-overlay-content">
-									<button class="view-details-btn">Summary</button>
-									<div class="project-links">
-										<a href="https://deepnote.com/@garizz/E-Commerce-EDA-v2-a87b5ed8-affe-4593-b21f-81cacee1bc3e" target="_blank" title="View Analysis">
-											<i class="fas fa-external-link-alt"></i>
-										</a>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="project-content">
-							<h3 class="project-title">E-Commerce EDA & Customer Segmentation</h3>
-							<p class="project-description">
-								Comprehensive exploratory data analysis on e-commerce data with RFM Analysis and K-Means clustering for customer segmentation.
-							</p>
-							<div class="project-tech">
-								<span class="tech-tag">Python</span>
-								<span class="tech-tag">Pandas</span>
-								<span class="tech-tag">K-Means</span>
-								<span class="tech-tag">RFM Analysis</span>
-							</div>
-						</div>
-					</div> -->
 					
-					<div class="project-card" data-category="analysis ml" data-project="sentiment-analysis">
+					<div class="project-card" data-category="nlp ml" data-project="sentiment-analysis">
 						<div class="project-image">
 							<img src="images/positive_review_words_img.png" alt="Customer Review Analysis" />
 							<div class="project-overlay">
@@ -1936,9 +2232,9 @@
 										<a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" target="_blank" title="GitHub">
 											<i class="fab fa-github"></i>
 										</a>
-										<a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" target="_blank" title="View Code">
+										<!-- <a href="https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb" target="_blank" title="View Code">
 											<i class="fas fa-external-link-alt"></i>
-										</a>
+										</a> -->
 									</div>
 								</div>
 							</div>
@@ -1956,6 +2252,8 @@
 							</div>
 						</div>
 					</div>
+
+
 				</div>
 			</section>
 
@@ -1981,11 +2279,32 @@
 							<h3><i class="fas fa-chart-line"></i> Key Results & Impact</h3>
 							<div class="modal-results"></div>
 						</div>
+						<div class="modal-section modal-code-section" id="code-section">
+							<div class="code-section-header" id="code-section-header">
+								<h3><i class="fas fa-code"></i> Code Snippets</h3>
+								<button class="code-expand-btn" id="code-expand-btn">
+									<span>Expand</span>
+									<i class="fas fa-chevron-down"></i>
+								</button>
+							</div>
+							<div class="code-content-wrapper" id="code-content-wrapper">
+								<div class="code-tabs" id="code-tabs"></div>
+								<div class="code-viewer" id="code-viewer">
+									<div class="code-header">
+										<span class="code-filename" id="code-filename"></span>
+										<button class="copy-code-btn" id="copy-code-btn">
+											<i class="fas fa-copy"></i> Copy Code
+										</button>
+									</div>
+									<div class="code-content" id="code-content"></div>
+								</div>
+							</div>
+						</div>
 						<div class="modal-section">
 							<h3><i class="fas fa-images"></i> Project Screenshots</h3>
 							<div class="modal-images"></div>
 						</div>
-						<div class="modal-links"></div>
+						<div class="modal-links" id="modal-links-container"></div>
 					</div>
 				</div>
 			</div>
@@ -2015,7 +2334,7 @@
 									<ul>
 										<li>Machine Learning & Forecasting: Developed machine learning models in Databricks to enhance operational decision-making. Delivered a driver safety gear classification model (e.g., detecting missing equipment) with ~92% precision, and a GMV forecasting model with ~4% MAPE. Outputs were automated and integrated into internal data systems for business visibility.</li>
 										<li>Data Engineering & Automation: Developed and scheduled data pipelines in Databricks using SQL (Presto/Trino), PySpark, and Python to streamline reporting and analytics. Automated workflows to support high-volume data processes and reduce manual intervention.</li>
-										<li>Data Quality & Reliability: Implemented robust data integrity and source validation mechanisms, significantly improving consistency and reducing the need for manual preprocessing in downstream workflows.</li>
+										<li>Data Quality & Reliability: Implemented robust data quality checks and source validation mechanisms, significantly improving consistency and reducing the need for manual preprocessing in downstream workflows.</li>
 										<li>Data Visualization & Reporting: Designed Power BI dashboards for regional performance reviews, enabling data-driven decisions across teams. Enhanced reporting efficiency by automating processes, reducing manual effort by over 70%.</li>
 										<li>Cross-functional Collaboration: Partnered with Finance, Operations, and Strategy teams to identify challenges and deliver impactful data solutions (ad-hoc analyses, insights, and dashboards).</li>
 									</ul>
@@ -2066,8 +2385,8 @@
 							<div class="timeline-details">
 								<div class="job-description">
 									<ul>
-										<li>Supported feature engineering for fraud detection model to avoid claim abuse cases.</li>
-										<li>Built interactive dashboards in Power BI to support performance tracking.</li>
+										<li>Supported the development of machine learning models to detect potential claim fraud.</li>
+										<li>Built dashboards in Power BI and conducted EDA on claims data to support underwriting decisions.</li>
 									</ul>
 								</div>
 							</div>
@@ -2307,6 +2626,8 @@
 		<script src="assets/js/util.js"></script>
 		<script src="assets/js/main.js"></script>
 		<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+		<!-- Project code snippets -->
+		<script src="assets/js/project-code-snippets.js"></script>
 		<script>
 			// Particles.js Configuration
 			particlesJS("particles-js", {
@@ -2452,6 +2773,7 @@
 					title: 'GMV Forecasting with Weighted Hybrid Model',
 					subtitle: 'Advanced Time Series Forecasting using SARIMAX + Prophet',
 					tech: ['Python', 'SARIMAX', 'Prophet', 'Pandas', 'NumPy', 'Matplotlib', 'Time Series Analysis'],
+					codeSnippetsId: 'gmv-forecasting', // Reference to external code snippets
 					overview: `
 						<p>This project focuses on developing an advanced time series forecasting model to predict Gross Merchandise Value (GMV) with high accuracy. The solution combines the strengths of two powerful forecasting algorithms: SARIMAX and Prophet.</p>
 						<p>The weighted hybrid approach leverages the statistical rigor of SARIMAX for trend and seasonality modeling while utilizing Prophet's ability to handle holidays and missing data gracefully.</p>
@@ -2483,7 +2805,8 @@
 				'multiclass-cnn': {
 					title: 'Multiclass Classification with CNN',
 					subtitle: 'Deep Learning for Animal Image Classification',
-					tech: ['Python', 'TensorFlow', 'Keras', 'CNN', 'Computer Vision', 'Data Augmentation', 'Transfer Learning'],
+					tech: ['Python', 'PyTorch', 'CNN', 'Computer Vision', 'Transfer Learning', 'Metric Learning', 'ResNet50'],
+					codeSnippetsId: 'multiclass-cnn', // Reference to external code snippets
 					overview: `
 						<p>This project demonstrates the power of Convolutional Neural Networks (CNNs) for multiclass image classification tasks. The goal was to classify images of different animal species with high accuracy while exploring the impact of architectural choices on model performance.</p>
 						<p>The project includes comprehensive experimentation with different CNN architectures, data augmentation techniques, and optimization strategies to achieve optimal results.</p>
@@ -2515,7 +2838,8 @@
 				'song-recommendation': {
 					title: 'Song Recommendation Engine',
 					subtitle: 'ML-Powered Music Discovery Platform',
-					tech: ['Python', 'Streamlit', 'K-Means Clustering', 'Scikit-learn', 'Pandas', 'Plotly', 'Audio Features'],
+					tech: ['Python', 'Streamlit', 'K-Means Clustering', 'Scikit-learn', 'Cosine Similarity', 'Plotly', 'Spotify API'],
+					codeSnippetsId: 'song-recommendation', // Reference to external code snippets
 					overview: `
 						<p>An intelligent song recommendation system that uses machine learning to suggest music based on audio features and user preferences. The system employs unsupervised learning techniques to discover patterns in music characteristics.</p>
 						<p>Built with Streamlit for an interactive web interface, this application demonstrates practical machine learning deployment in a user-friendly format.</p>
@@ -2531,10 +2855,10 @@
 					`,
 					results: `
 						<ul>
-							<li><strong>Recommendation Quality:</strong> Achieves high user satisfaction with contextually relevant song suggestions</li>
-							<li><strong>Real-time Performance:</strong> Sub-second response time for recommendation generation</li>
-							<li><strong>User Engagement:</strong> Interactive interface with 95%+ positive user feedback</li>
-							<li><strong>Scalability:</strong> Efficient clustering algorithm handles large music databases</li>
+							<li><strong>Clustering Performance:</strong> Successfully grouped songs into 8 optimal clusters using Elbow Method with 9 audio features (danceability, energy, valence, etc.)</li>
+							<li><strong>Recommendation Accuracy:</strong> Cosine similarity algorithm delivers highly relevant suggestions with sub-second response time</li>
+							<li><strong>Interactive Deployment:</strong> Live Streamlit app with real-time recommendations, audio feature visualizations, and intuitive UI</li>
+							<li><strong>Scalability:</strong> Efficient cluster-based filtering reduces search space while maintaining recommendation quality</li>
 						</ul>
 					`,
 					images: [
@@ -2580,7 +2904,8 @@
 				'sentiment-analysis': {
 					title: 'Customer Review Analysis & Sentiment Prediction',
 					subtitle: 'NLP-Powered Business Intelligence',
-					tech: ['Python', 'NLP', 'Scikit-learn', 'NLTK', 'TextBlob', 'Machine Learning', 'Feature Engineering'],
+					tech: ['Python', 'NLP', 'Scikit-learn', 'NLTK', 'TF-IDF', 'GridSearchCV', 'Machine Learning'],
+					codeSnippetsId: 'sentiment-analysis', // Reference to external code snippets
 					overview: `
 						<p>An advanced natural language processing project that analyzes customer reviews to extract sentiment and provide business insights. The system processes unstructured text data to understand customer opinions and satisfaction levels.</p>
 						<p>This project demonstrates the power of NLP in transforming qualitative feedback into quantitative business metrics.</p>
@@ -2596,10 +2921,10 @@
 					`,
 					results: `
 						<ul>
-							<li><strong>Prediction Accuracy:</strong> Achieved 88% accuracy in sentiment classification</li>
-							<li><strong>Business Insights:</strong> Identified key factors driving customer satisfaction</li>
-							<li><strong>Automated Analysis:</strong> Reduced manual review processing time by 80%</li>
-							<li><strong>Actionable Intelligence:</strong> Generated specific recommendations for product improvement</li>
+							<li><strong>Model Performance:</strong> Achieved 86% accuracy and 82.9% F1-score using Logistic Regression with L1 regularization</li>
+							<li><strong>Dataset Processing:</strong> Successfully processed 170K+ reviews from 958 products with 78.3% positive, 8.1% neutral, and 13.6% negative sentiment</li>
+							<li><strong>Feature Engineering:</strong> Extracted 1000 TF-IDF features with unigrams and bigrams for optimal text representation</li>
+							<li><strong>Model Comparison:</strong> Evaluated 5 algorithms (Logistic Regression, Naive Bayes, SVM, Random Forest, Gradient Boosting) with GridSearchCV</li>
 						</ul>
 					`,
 					images: [
@@ -2607,6 +2932,45 @@
 					],
 					links: [
 						{ url: 'https://github.com/hungthinh005/python-projects/blob/main/Customer%20Review%20Analysis%20and%20Sentiment%20Prediction.ipynb', text: 'View on GitHub', icon: 'fab fa-github' }
+					]
+				},
+				'analytics-engineer': {
+					title: 'E-commerce Data Pipeline & Analytics Platform',
+					subtitle: 'End-to-End Analytics Engineering Solution',
+					tech: ['Python', 'PostgreSQL', 'Apache Airflow', 'Pandas', 'SQLAlchemy', 'ETL', 'Data Warehousing', 'Dimensional Modeling'],
+					codeSnippetsId: 'analytics-engineer', // Reference to external code snippets
+					overview: `
+						<p>A complete, production-ready analytics engineering project demonstrating end-to-end data pipeline development for an e-commerce platform. This project showcases the entire data engineering lifecycle from raw data ingestion to actionable business insights.</p>
+						<p>Built with a three-layer architecture (Staging → Core → Analytics), this solution implements industry best practices for data warehousing, ETL processes, and data quality management.</p>
+					`,
+					technical: `
+						<ul>
+							<li><strong>ETL Pipeline:</strong> Complete extract, transform, load processes with incremental and full load strategies, error handling, and retry logic</li>
+							<li><strong>Data Warehouse Architecture:</strong> Three-layer design (Staging, Core, Analytics) with 20+ tables across 3 schemas, implementing star schema with 6 dimensions and 3 fact tables</li>
+							<li><strong>Dimensional Modeling:</strong> Star schema optimized for query performance with SCD Type 2 for historical tracking of customers and products</li>
+							<li><strong>Workflow Orchestration:</strong> 3 production-ready Airflow DAGs with task dependencies, parallel execution, and comprehensive error handling</li>
+							<li><strong>Data Quality Framework:</strong> Automated validation including schema validation, null checks, referential integrity, business rules, and anomaly detection</li>
+							<li><strong>Python Implementation:</strong> Object-oriented design with pandas for data processing, SQLAlchemy for database operations, connection pooling, and comprehensive logging</li>
+							<li><strong>SQL Excellence:</strong> Complex queries with window functions, CTEs, subqueries, and query optimization with proper indexing</li>
+						</ul>
+					`,
+					results: `
+						<ul>
+							<li><strong>Scalability:</strong> Successfully processes 5,000+ daily orders with capability to handle millions of rows through efficient batch processing</li>
+							<li><strong>Data Quality:</strong> Implemented comprehensive validation framework reducing data errors by 95% with automated monitoring and alerting</li>
+							<li><strong>Business Metrics:</strong> Enables tracking of Daily/Monthly GMV, Customer Lifetime Value, Acquisition & Retention, Product Performance, and Order Fulfillment metrics</li>
+							<li><strong>Query Performance:</strong> Optimized star schema design provides sub-second query response for business intelligence dashboards</li>
+							<li><strong>Automation:</strong> Airflow orchestration reduces manual intervention by 90%, enabling scheduled and automated data pipeline execution</li>
+							<li><strong>Production-Ready:</strong> Comprehensive error handling, logging, monitoring, and testing framework suitable for enterprise deployment</li>
+							<li><strong>Code Quality:</strong> 3,500+ lines of well-documented, modular code with 25+ files following best practices</li>
+						</ul>
+					`,
+					images: [
+						{ src: 'images/dimensional model.jpeg', caption: 'Data Pipeline Architecture and Dimensional Model' }
+					],
+					links: [
+						{ url: 'https://github.com/hungthinh005/analytics_engineer_project', text: 'View on GitHub', icon: 'fab fa-github' },
+						{ url: 'https://github.com/hungthinh005/analytics_engineer_project/tree/main/docs', text: 'Documentation', icon: 'fas fa-book' }
 					]
 				}
 			};
@@ -2657,6 +3021,91 @@
 				document.querySelector('.modal-technical').innerHTML = project.technical;
 				document.querySelector('.modal-results').innerHTML = project.results;
 				
+				// Code snippets (if available)
+				const codeSection = document.getElementById('code-section');
+				let codeSnippets = null;
+				
+				// Check if project has code snippets ID (external) or inline code
+				if (project.codeSnippetsId && typeof projectCodeSnippets !== 'undefined') {
+					codeSnippets = projectCodeSnippets[project.codeSnippetsId];
+				} else if (project.code) {
+					codeSnippets = project.code;
+				}
+				
+				if (codeSnippets && codeSnippets.length > 0) {
+					codeSection.style.display = 'block';
+					
+					// Create tabs
+					const codeTabs = document.getElementById('code-tabs');
+					codeTabs.innerHTML = codeSnippets.map((snippet, index) => 
+						`<div class="code-tab ${index === 0 ? 'active' : ''}" data-index="${index}">
+							${snippet.name}
+						</div>`
+					).join('');
+					
+					// Display first code snippet
+					displayCodeSnippet(codeSnippets[0]);
+					
+					// Add tab click handlers
+					document.querySelectorAll('.code-tab').forEach(tab => {
+						tab.addEventListener('click', function() {
+							// Update active tab
+							document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+							this.classList.add('active');
+							
+							// Display selected code
+							const index = parseInt(this.getAttribute('data-index'));
+							displayCodeSnippet(codeSnippets[index]);
+						});
+					});
+					
+					// Add copy button handler
+					document.getElementById('copy-code-btn').onclick = function() {
+						const codeContent = document.querySelector('#code-content code').textContent;
+						navigator.clipboard.writeText(codeContent).then(() => {
+							const btn = this;
+							btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+							btn.classList.add('copied');
+							setTimeout(() => {
+								btn.innerHTML = '<i class="fas fa-copy"></i> Copy Code';
+								btn.classList.remove('copied');
+							}, 2000);
+						});
+					};
+					
+					// Add expand/collapse handler
+					const expandBtn = document.getElementById('code-expand-btn');
+					const codeWrapper = document.getElementById('code-content-wrapper');
+					const codeHeader = document.getElementById('code-section-header');
+					
+					expandBtn.onclick = function(e) {
+						e.stopPropagation();
+						toggleCodeSection();
+					};
+					
+					codeHeader.onclick = function() {
+						toggleCodeSection();
+					};
+					
+					function toggleCodeSection() {
+						const isExpanded = codeWrapper.classList.contains('expanded');
+						
+						if (isExpanded) {
+							// Collapse
+							codeWrapper.classList.remove('expanded');
+							expandBtn.classList.remove('expanded');
+							expandBtn.querySelector('span').textContent = 'Expand';
+						} else {
+							// Expand
+							codeWrapper.classList.add('expanded');
+							expandBtn.classList.add('expanded');
+							expandBtn.querySelector('span').textContent = 'Collapse';
+						}
+					}
+				} else {
+					codeSection.style.display = 'none';
+				}
+				
 				// Images
 				const imagesContainer = document.querySelector('.modal-images');
 				imagesContainer.innerHTML = project.images.map(img => 
@@ -2668,15 +3117,52 @@
 				
 				// Links
 				const linksContainer = document.querySelector('.modal-links');
-				linksContainer.innerHTML = project.links.map(link => 
+				const linksHTML = project.links.map(link => 
 					`<a href="${link.url}" target="_blank" class="modal-link">
 						<i class="${link.icon}"></i> ${link.text}
 					</a>`
 				).join('');
 				
+				// Wrap links in left container and add back button on right
+				const backButtonHTML = `
+					<button class="modal-back-btn" id="modal-back-btn-inline">
+						<i class="fas fa-arrow-left"></i>
+						<span>Back to Projects</span>
+					</button>`;
+				
+				linksContainer.innerHTML = `
+					<div class="modal-links-left">${linksHTML}</div>
+					${backButtonHTML}
+				`;
+				
+				// Add back button event listener
+				document.getElementById('modal-back-btn-inline').addEventListener('click', closeProjectModal);
+				
 				// Show modal
 				projectModal.classList.add('active');
 				document.body.style.overflow = 'hidden';
+			}
+			
+			function displayCodeSnippet(snippet) {
+				document.getElementById('code-filename').textContent = snippet.filename;
+				const codeContent = document.getElementById('code-content');
+				codeContent.innerHTML = `<pre><code class="language-${snippet.language}">${escapeHtml(snippet.code)}</code></pre>`;
+				
+				// Re-run Prism highlighting
+				if (typeof Prism !== 'undefined') {
+					Prism.highlightAll();
+				}
+			}
+			
+			function escapeHtml(text) {
+				const map = {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;'
+				};
+				return text.replace(/[&<>"']/g, m => map[m]);
 			}
 
 			function closeProjectModal() {
@@ -2732,5 +3218,10 @@
 				});
 			});
 		</script>
+		<!-- Prism.js for syntax highlighting -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
 	</body>
 </html>
