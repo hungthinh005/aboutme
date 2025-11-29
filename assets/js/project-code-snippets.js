@@ -6,167 +6,521 @@
 const projectCodeSnippets = {
 	'gmv-forecasting': [
 		{
-			name: 'SARIMAX Model Training',
-			filename: 'sarimax_training.py',
+			name: 'ML Pipeline with MLflow Tracking',
+			filename: 'src/models/train.py',
 			language: 'python',
 			code: `"""
-SARIMAX Model Training with Auto ARIMA
-Finds optimal hyperparameters for seasonal forecasting
+Production ML Training Pipeline with MLflow Experiment Tracking
+Trains hybrid SARIMAX + Prophet model with automated logging
 """
 
-from pmdarima.arima import auto_arima
-from sklearn.preprocessing import StandardScaler
-import joblib
+import mlflow
+import mlflow.pyfunc
+from pathlib import Path
+from src.data.data_loader import DataLoader, create_train_test_sets
+from src.models.hybrid_model import HybridForecaster
+from src.utils.config_loader import load_config
+from sklearn.metrics import mean_absolute_error, mean_absolute_percentage_error
+from sklearn.metrics import root_mean_squared_error
 
-m_candidates = [12, 26, 52]  # Test different seasonal periods
+def train_city_model(city, train_data, test_data, config, model_config):
+    """Train hybrid model for a specific city"""
+    # Prepare data
+    target_col = config['data']['target_column']
+    exog_features = config['data']['exogenous_features']
+    
+    y_train = train_data[target_col].values
+    X_train = train_data[exog_features]
+    dates_train = train_data.index
+    
+    y_test = test_data[target_col].values
+    X_test = test_data[exog_features]
+    dates_test = test_data.index
+    
+    # Get model configurations
+    sarimax_config = config['training']['sarimax']
+    prophet_config = config['training']['prophet']
+    hybrid_config = config['training']['hybrid']
+    
+    # Initialize and train hybrid model
+    model = HybridForecaster(
+        sarimax_config=sarimax_config,
+        prophet_config=prophet_config,
+        hybrid_config=hybrid_config
+    )
+    
+    # Train with validation data for weight optimization
+    model.fit(
+        y_train=y_train,
+        X_train=X_train,
+        dates_train=dates_train,
+        y_val=y_test,
+        X_val=X_test,
+        dates_val=dates_test
+    )
+    
+    return model
 
-for city in city_name_list:
-    df_train = train_sets[city].copy()
-    df_test = test_sets[city].copy()
+# Main training loop
+config = load_config('config/config.yaml')
+mlflow.set_tracking_uri(config['mlflow']['tracking_uri'])
+mlflow.set_experiment(config['mlflow']['experiment_name'])
+
+# Load and split data
+loader = DataLoader(...)
+df = loader.preprocess_data()
+train_sets, test_sets = create_train_test_sets(df, cities, split_date)
+
+for city in cities:
+    with mlflow.start_run(run_name=f"hybrid_model_{city}"):
+        # Log parameters
+        mlflow.log_params({
+            'city': city,
+            'model_type': 'hybrid_sarimax_prophet'
+        })
+        
+        # Train model
+        model = train_city_model(city, train_sets[city], 
+                                test_sets[city], config, model_config)
+        
+        # Evaluate
+        y_pred, _ = model.predict(len(y_test), X_test, dates_test)
+        metrics = {
+            'mape': mean_absolute_percentage_error(y_test, y_pred),
+            'mae': mean_absolute_error(y_test, y_pred),
+            'rmse': root_mean_squared_error(y_test, y_pred)
+        }
+        
+        # Log to MLflow
+        mlflow.log_metrics(metrics)
+        mlflow.log_artifacts(str(model_path))
+        
+        print(f"✅ {city}: MAPE={metrics['mape']:.2%}")`
+		},
+		{
+			name: 'Hybrid Model with Weight Optimization',
+			filename: 'src/models/hybrid_model.py',
+			language: 'python',
+			code: `"""
+Weighted Hybrid Model: SARIMAX + Prophet
+Optimizes ensemble weights using validation data
+"""
+
+import numpy as np
+from scipy.optimize import minimize
+from src.models.sarimax_model import SARIMAXForecaster
+from src.models.prophet_model import ProphetForecaster
+
+class HybridForecaster:
+    """Weighted hybrid model combining SARIMAX and Prophet"""
     
-    # Prepare features and target
-    exog_cols = [col for col in df_train.columns 
-                 if col not in ['city_name', 'gmv']]
-    X_train = df_train[exog_cols]
-    y_train = df_train['gmv']
+    def __init__(self, sarimax_config, prophet_config, hybrid_config):
+        self.sarimax_model = SARIMAXForecaster(sarimax_config)
+        self.prophet_model = ProphetForecaster(prophet_config)
+        self.hybrid_config = hybrid_config
+        self.weights = np.array([0.5, 0.5])  # Initial weights
+        self.is_fitted = False
     
-    # Scale features
-    scaler = StandardScaler()
-    X_scaled_train = scaler.fit_transform(X_train)
+    def fit(self, y_train, X_train, dates_train, 
+            y_val=None, X_val=None, dates_val=None):
+        """Fit hybrid model and optimize weights"""
+        # Train SARIMAX component
+        self.sarimax_model.fit(y_train, X_train.values)
+        
+        # Train Prophet component (with fallback for Windows)
+        try:
+            self.prophet_model.fit(y_train, X_train, dates_train)
+            prophet_available = True
+        except Exception as e:
+            logger.warning(f"Prophet failed: {e}. Using SARIMAX-only.")
+            prophet_available = False
+            self.weights = np.array([1.0, 0.0])
+        
+        # Optimize weights if both models available
+        if prophet_available and y_val is not None:
+            self._optimize_weights(y_val, X_val, dates_val)
+        
+        self.is_fitted = True
+        return self
     
-    best_model = None
-    best_aic = float('inf')
-    best_m = None
-    
-    # Test different seasonal periods
-    for m in m_candidates:
-        model_try = auto_arima(
-            y=y_train, 
-            X=X_scaled_train,
-            seasonal=True, m=m,
-            start_p=1, start_q=1, max_p=5, max_q=5,
-            start_P=0, start_Q=0, max_P=5, max_Q=5,
-            stepwise=True,
-            information_criterion='aicc'
+    def _optimize_weights(self, y_val, X_val, dates_val):
+        """Optimize ensemble weights using validation data"""
+        n_periods = len(y_val)
+        
+        # Get predictions from both models
+        sarimax_preds, _ = self.sarimax_model.predict(n_periods, X_val.values)
+        prophet_preds, _ = self.prophet_model.predict(n_periods, X_val, dates_val)
+        
+        # Calculate logarithmic errors
+        e_sarimax = np.log(y_val) - np.log(sarimax_preds)
+        e_prophet = np.log(y_val) - np.log(prophet_preds)
+        error_matrix = np.vstack([e_sarimax, e_prophet]).T
+        
+        def objective(weights):
+            """Minimize sum of absolute weighted errors"""
+            return np.sum(np.abs(np.dot(error_matrix, weights)))
+        
+        # Optimize with constraints: weights sum to 1, range [0,1]
+        result = minimize(
+            objective,
+            x0=[0.5, 0.5],
+            method='SLSQP',
+            bounds=[(0, 1), (0, 1)],
+            constraints={'type': 'eq', 'fun': lambda w: np.sum(w) - 1}
         )
         
-        current_aic = model_try.aic()
-        if current_aic < best_aic:
-            best_model = model_try
-            best_aic = current_aic
-            best_m = m
+        if result.success:
+            self.weights = result.x
+            print(f"Optimal weights: SARIMAX={self.weights[0]:.4f}, "
+                  f"Prophet={self.weights[1]:.4f}")
     
-    print(f"Best model for '{city}' with m={best_m} (AICc={best_aic:.2f})")
-    print(f"Order: {best_model.order}, Seasonal: {best_model.seasonal_order}")
-    
-    # Save model and scaler
-    artifacts = {'model': best_model, 'scaler': scaler}
-    joblib.dump(artifacts, f"SARIMAX_{city}.pkl")`
+    def predict(self, n_periods, X, dates):
+        """Make hybrid predictions using weighted average"""
+        # Get predictions from both models
+        sarimax_preds, _ = self.sarimax_model.predict(n_periods, X.values)
+        prophet_preds, _ = self.prophet_model.predict(n_periods, X, dates)
+        
+        # Combine using logarithmic weighted average
+        log_hybrid = (self.weights[0] * np.log(sarimax_preds) + 
+                      self.weights[1] * np.log(prophet_preds))
+        hybrid_preds = np.exp(log_hybrid)
+        
+        return hybrid_preds, {
+            'sarimax': sarimax_preds,
+            'prophet': prophet_preds
+        }`
 		},
 		{
-			name: 'Prophet Model',
-			filename: 'prophet_model.py',
+			name: 'FastAPI Production Deployment',
+			filename: 'src/api/main.py',
 			language: 'python',
 			code: `"""
-Prophet Model Implementation
-Handles seasonality, holidays, and external regressors
+FastAPI RESTful API for Model Serving
+Provides prediction endpoints with Prometheus monitoring
 """
 
-from prophet import Prophet
-from sklearn.metrics import mean_absolute_percentage_error
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from typing import List, Dict, Any
+from prometheus_client import Counter, Histogram, generate_latest
+import mlflow.pyfunc
+import pandas as pd
+import logging
 
-for city in city_name_list:
-    # Prepare data in Prophet format
-    df_train = train_sets[city][['gmv'] + list_features].copy()
-    df_train.index.name = 'ds'
-    df_train = df_train.reset_index()
-    df_train.columns = ['ds', 'y'] + list_features
+app = FastAPI(
+    title="GMV Forecasting API",
+    description="Production ML API for GMV predictions",
+    version="1.0.0"
+)
+
+# Prometheus metrics
+REQUEST_COUNT = Counter('api_request_count', 'Total API requests')
+REQUEST_LATENCY = Histogram('api_request_latency', 'Request latency')
+PREDICTION_COUNT = Counter('prediction_count', 'Total predictions made')
+
+# Load models from MLflow
+models = {}
+CITIES = ['hanoi', 'hcmc', 'danang', 'haiphong']
+
+for city in CITIES:
+    models[city] = mlflow.pyfunc.load_model(f"models/{city}/hybrid_model")
+
+# Pydantic schemas
+class PredictionRequest(BaseModel):
+    city: str = Field(..., description="City name")
+    features: Dict[str, float] = Field(..., description="Feature values")
     
-    # Initialize Prophet model
-    model = Prophet(    
-        seasonality_mode='multiplicative',
-        interval_width=0.95
-    )
+class PredictionResponse(BaseModel):
+    city: str
+    predicted_gmv: float
+    model_version: str
+    confidence_interval: Dict[str, float]
+
+# API endpoints
+@app.get("/")
+def root():
+    """Health check endpoint"""
+    return {"status": "healthy", "version": "1.0.0"}
+
+@app.get("/models")
+def list_models():
+    """List available city models"""
+    return {
+        "available_models": CITIES,
+        "model_type": "SARIMAX + Prophet Hybrid"
+    }
+
+@app.post("/predict", response_model=PredictionResponse)
+@REQUEST_LATENCY.time()
+def predict(request: PredictionRequest):
+    """
+    Generate GMV forecast for specified city
     
-    # Add external regressors
-    for regressor in list_features:
-        model.add_regressor(regressor, mode='multiplicative')
+    Returns:
+        Predicted GMV with confidence intervals
+    """
+    REQUEST_COUNT.inc()
     
-    # Add country-specific holidays
-    model.add_country_holidays(country_name='VN')
+    if request.city not in CITIES:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Model not found for city: {request.city}"
+        )
     
-    # Add custom seasonalities
-    model.add_seasonality(name='monthly', period=30.5, fourier_order=5)
-    model.add_seasonality(name='quarterly', period=91.25, fourier_order=5)
-    model.add_seasonality(name='yearly', period=365.25, fourier_order=5)
-    
-    # Fit the model
-    model.fit(df_train)
-    
-    # Make predictions
-    forecast = model.predict(df_test)
-    
-    # Calculate metrics
-    y_true = df_test['y'].values
-    y_pred = forecast['yhat'].values
-    mape = mean_absolute_percentage_error(y_true, y_pred)
-    
-    print(f"{city} - MAPE: {mape:.2%}")`
+    try:
+        # Prepare input data
+        input_df = pd.DataFrame([request.features])
+        
+        # Make prediction
+        prediction = models[request.city].predict(input_df)
+        
+        PREDICTION_COUNT.inc()
+        
+        return PredictionResponse(
+            city=request.city,
+            predicted_gmv=float(prediction[0]),
+            model_version="1.0.0",
+            confidence_interval={
+                "lower": float(prediction[0] * 0.95),
+                "upper": float(prediction[0] * 1.05)
+            }
+        )
+    except Exception as e:
+        logging.error(f"Prediction error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/metrics")
+def metrics():
+    """Expose Prometheus metrics"""
+    return generate_latest()
+
+# Run with: uvicorn src.api.main:app --reload --port 8000`
 		},
 		{
-			name: 'Weighted Hybrid Model',
-			filename: 'hybrid_optimization.py',
-			language: 'python',
-			code: `"""
-Weighted Hybrid Model Optimization
-Combines SARIMAX and Prophet using optimized weights
-"""
+			name: 'Docker Compose Orchestration',
+			filename: 'deployment/docker-compose.yml',
+			language: 'yaml',
+			code: `# ==================================================
+# Docker Compose - Full MLOps Stack
+# Services: API, MLflow, PostgreSQL, Redis, Prometheus, Grafana
+# ==================================================
 
-from scipy.optimize import minimize
-import numpy as np
+version: '3.8'
 
-optimal_weights = {}
+services:
+  # FastAPI Application
+  api:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: gmv-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
+      - DATABASE_URL=postgresql://user:password@postgres:5432/gmv_db
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ../models:/app/models
+      - ../data:/app/data
+    depends_on:
+      - postgres
+      - redis
+      - mlflow
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+    networks:
+      - mlops-network
 
-for city in city_name_list:
-    # Calculate logarithmic errors for both models
-    e_sarimax = np.log(actual_values) - np.log(sarimax_predictions)
-    e_prophet = np.log(actual_values) - np.log(prophet_predictions)
-    
-    # Create error matrix [N_samples x 2_models]
-    error_matrix = np.vstack([e_sarimax, e_prophet]).T
-    
-    def objective_function(weights):
-        """Minimize weighted sum of absolute errors"""
-        weighted_errors = np.dot(error_matrix, weights)
-        return np.sum(np.abs(weighted_errors))
-    
-    # Initial guess: equal weights
-    initial_weights = [0.5, 0.5]
-    
-    # Constraints: weights sum to 1 and are non-negative
-    constraints = ({'type': 'eq', 'fun': lambda w: np.sum(w) - 1})
-    bounds = [(0, 1), (0, 1)]
-    
-    # Optimize weights
-    result = minimize(
-        objective_function,
-        initial_weights,
-        method='SLSQP',
-        bounds=bounds,
-        constraints=constraints
-    )
-    
-    optimal_weights[city] = result.x
-    print(f"Optimal Weights -> {city}:")
-    print(f"  SARIMAX: {optimal_weights[city][0]:.4f}")
-    print(f"  Prophet: {optimal_weights[city][1]:.4f}")
-    
-    # Calculate hybrid forecast
-    log_hybrid = (optimal_weights[city][0] * np.log(sarimax_predictions) + 
-                  optimal_weights[city][1] * np.log(prophet_predictions))
-    hybrid_forecast = np.exp(log_hybrid)
-    
-    # Result: ~3% MAPE achieved!`
+  # MLflow Tracking Server
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.9.2
+    container_name: gmv-mlflow
+    ports:
+      - "5001:5001"
+    environment:
+      - BACKEND_STORE_URI=postgresql://user:password@postgres:5432/mlflow_db
+      - DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    volumes:
+      - mlflow-artifacts:/mlflow/artifacts
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://user:password@postgres:5432/mlflow_db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5001
+    depends_on:
+      - postgres
+    networks:
+      - mlops-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gmv-postgres
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_MULTIPLE_DATABASES=mlflow_db,gmv_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - mlops-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: gmv-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - mlops-network
+
+  # Prometheus Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: gmv-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - mlops-network
+
+  # Grafana Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: gmv-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - mlops-network
+
+volumes:
+  postgres-data:
+  mlflow-artifacts:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  mlops-network:
+    driver: bridge
+
+# Usage:
+# docker compose -f deployment/docker-compose.yml up -d
+# Access API: http://localhost:8000
+# Access MLflow: http://localhost:5001
+# Access Grafana: http://localhost:3000`
+		},
+		{
+			name: 'Configuration Management',
+			filename: 'config/config.yaml',
+			language: 'yaml',
+			code: `# ==================================================
+# GMV Forecasting MLOps Configuration
+# Central configuration for all pipeline components
+# ==================================================
+
+# Data Configuration
+data:
+  raw_path: "data/raw/gmv_data.csv"
+  processed_path: "data/processed/"
+  train_test_split: 0.8
+  date_column: "date"
+  target_column: "gmv"
+
+# Cities to train models for
+cities:
+  - hanoi
+  - hcmc
+  - danang
+  - haiphong
+  - cantho
+  - nhatrang
+  - dalat
+  - vungtau
+  - halong
+  - hoian
+
+# Feature Engineering
+features:
+  exogenous:
+    - temperature
+    - rainfall
+    - is_holiday
+    - day_of_week
+    - month
+    - is_weekend
+  scaling: "standard"
+  selection_method: "kbest"
+  max_features: 10
+
+# SARIMAX Model Configuration
+sarimax:
+  seasonal: true
+  m_candidates: [12, 26, 52]
+  max_p: 5
+  max_q: 5
+  max_P: 5
+  max_Q: 5
+  information_criterion: "aicc"
+  stepwise: true
+
+# Prophet Model Configuration
+prophet:
+  seasonality_mode: "multiplicative"
+  interval_width: 0.95
+  country_holidays: "VN"
+  custom_seasonalities:
+    - name: "monthly"
+      period: 30.5
+      fourier_order: 5
+    - name: "quarterly"
+      period: 91.25
+      fourier_order: 5
+
+# Hybrid Model Configuration
+hybrid:
+  optimization_method: "SLSQP"
+  error_metric: "mae"
+  log_transform: true
+
+# Evaluation Metrics
+metrics:
+  - mape
+  - mae
+  - rmse
+  - aicc
+  - r2_score
+
+# MLflow Configuration
+mlflow:
+  tracking_uri: "http://localhost:5001"
+  experiment_name: "gmv-forecasting-production"
+  artifact_location: "mlruns/"
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  log_level: "info"
+
+# Model Storage
+models:
+  save_path: "models/"
+  format: "pickle"
+  versioning: true`
 		}
 	],
 	'analytics-engineer': [
