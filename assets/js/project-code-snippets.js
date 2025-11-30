@@ -671,172 +671,513 @@ CREATE INDEX idx_dim_customers_current ON analytics.dim_customers(customer_id, i
 	],
 	'multiclass-cnn': [
 		{
-			name: 'Custom CNN Architecture',
-			filename: 'model_architecture.py',
+			name: 'Model Factory with Multiple Architectures',
+			filename: 'src/models/model_factory.py',
 			language: 'python',
 			code: `"""
-VGG-style CNN with Batch Normalization
-Dual-convolution blocks for deep feature learning
+Model Factory for Animal Classification MLOps
+Supports ResNet-50, CNNDualConv, and CNNSingleConv architectures
 """
 
 import torch
 import torch.nn as nn
+from src.models.resnet_model import ResNetClassifier
+from src.models.cnn_models import CNNDualConv, CNNSingleConv
+from src.utils.logger import setup_logger
 
-def create_conv_block(in_channels, out_channels, kernel_size=3):
-    """
-    Creates a convolutional block with:
-    - 2x Conv2D layers
-    - Batch Normalization after each conv
-    - ReLU activation
-    - MaxPooling for dimensionality reduction
-    """
-    return nn.Sequential(
-        nn.Conv2d(
-            in_channels=in_channels, 
-            out_channels=out_channels, 
-            kernel_size=kernel_size, 
-            padding="same"
-        ),
-        nn.BatchNorm2d(num_features=out_channels),
-        nn.ReLU(),
-        nn.Conv2d(
-            in_channels=out_channels, 
-            out_channels=out_channels, 
-            kernel_size=kernel_size, 
-            padding="same"
-        ), 
-        nn.BatchNorm2d(num_features=out_channels),
-        nn.ReLU(),
-        nn.MaxPool2d(kernel_size=2)
-    )
+logger = setup_logger(__name__)
 
-# Build the complete model
-model = nn.Sequential(
-    # Feature extraction layers
-    create_conv_block(in_channels=3, out_channels=8),
-    create_conv_block(in_channels=8, out_channels=16),
-    create_conv_block(in_channels=16, out_channels=32),
+def create_model(config: dict) -> nn.Module:
+    """
+    Factory function to create model based on configuration
     
-    # Classification head
-    nn.Flatten(),
-    nn.Sequential(
-        nn.Dropout(0.5),
-        nn.Linear(in_features=25088, out_features=512),
-        nn.ReLU(),
-    ),
-    nn.Sequential(
-        nn.Dropout(0.5),
-        nn.Linear(in_features=512, out_features=10),
-    )
-)
+    Args:
+        config: Configuration dictionary with model architecture settings
+        
+    Returns:
+        PyTorch model ready for training
+    """
+    architecture = config['model']['architecture']
+    num_classes = config['data']['num_classes']
+    dropout_rate = config['model'].get('dropout_rate', 0.5)
+    pretrained = config['model'].get('pretrained', True)
+    
+    logger.info(f"Creating model: {architecture}")
+    logger.info(f"Number of classes: {num_classes}")
+    
+    if architecture == 'resnet50':
+        model = ResNetClassifier(
+            num_classes=num_classes,
+            pretrained=pretrained,
+            freeze_backbone=config['model'].get('freeze_backbone', False),
+            dropout_rate=dropout_rate
+        )
+        logger.info(f"ResNet-50 created (pretrained={pretrained})")
+        
+    elif architecture == 'cnn_dual':
+        model = CNNDualConv(
+            num_classes=num_classes,
+            dropout_rate=dropout_rate
+        )
+        logger.info("CNNDualConv created (VGG-style)")
+        
+    elif architecture == 'cnn_single':
+        model = CNNSingleConv(
+            num_classes=num_classes,
+            dropout_rate=dropout_rate
+        )
+        logger.info("CNNSingleConv created (Lightweight)")
+        
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+    
+    # Count parameters
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    logger.info(f"Total parameters: {total_params:,}")
+    logger.info(f"Trainable parameters: {trainable_params:,}")
+    
+    return model
 
-# Model summary: 3 conv blocks -> 8->16->32 channels -> Dense(512) -> Output(10)`
+# Example usage:
+# config = load_config('configs/config.yaml')
+# model = create_model(config)  # Returns ResNet-50 by default`
 		},
 		{
-			name: 'Training with Metric Learning',
-			filename: 'training_loop.py',
+			name: 'Training Pipeline with MLflow',
+			filename: 'src/training/trainer.py',
 			language: 'python',
 			code: `"""
-Training Loop with Combined Loss Function
-Uses CrossEntropy + Triplet Margin Loss for better feature learning
+Production Training Pipeline with MLflow Experiment Tracking
+Supports early stopping, learning rate scheduling, and comprehensive logging
 """
 
 import torch
 import torch.nn as nn
-from pytorch_metric_learning import losses, miners
-from tqdm.notebook import tqdm
+import torch.optim as optim
+import mlflow
+import mlflow.pytorch
+from pathlib import Path
+from src.training.early_stopping import EarlyStopping
+from src.utils.metrics import calculate_metrics
 
-def train_epoch(model, optimizer, loss_fn, data_loader, device):
-    """
-    Train for one epoch using combined loss:
-    - Metric Loss: Pulls same-class samples together, pushes different-class apart
-    - Classification Loss: Standard cross-entropy for class prediction
-    """
-    training_loss = 0.0
-    correct = 0
-    total = 0
+class Trainer:
+    """PyTorch trainer with MLflow integration"""
     
-    model.train()
+    def __init__(self, model, config, device='cuda'):
+        self.model = model.to(device)
+        self.config = config
+        self.device = device
+        
+        # Training components
+        self.optimizer = self._create_optimizer()
+        self.scheduler = self._create_scheduler()
+        self.criterion = nn.CrossEntropyLoss()
+        
+        # Early stopping
+        if config['training']['early_stopping']['enabled']:
+            self.early_stopping = EarlyStopping(
+                patience=config['training']['early_stopping']['patience'],
+                min_delta=config['training']['early_stopping']['min_delta'],
+                mode='min'
+            )
     
-    # Initialize metric loss (Triplet Margin with margin=0.2)
-    metric_loss = losses.TripletMarginLoss(margin=0.2)
+    def train(self, train_loader, val_loader, epochs):
+        """Main training loop with MLflow tracking"""
+        
+        # Start MLflow run
+        mlflow.set_experiment(self.config['mlflow']['experiment_name'])
+        
+        with mlflow.start_run():
+            # Log hyperparameters
+            mlflow.log_params({
+                'architecture': self.config['model']['architecture'],
+                'num_classes': self.config['data']['num_classes'],
+                'batch_size': self.config['training']['batch_size'],
+                'learning_rate': self.config['training']['learning_rate'],
+                'epochs': epochs,
+                'optimizer': self.config['training']['optimizer']['type']
+            })
+            
+            best_val_loss = float('inf')
+            history = {'train_loss': [], 'val_loss': [], 'val_accuracy': []}
+            
+            for epoch in range(epochs):
+                # Training phase
+                train_loss = self._train_epoch(train_loader)
+                
+                # Validation phase
+                val_loss, val_acc, val_metrics = self._validate(val_loader)
+                
+                # Log to MLflow
+                mlflow.log_metrics({
+                    'train_loss': train_loss,
+                    'val_loss': val_loss,
+                    'val_accuracy': val_acc,
+                    'val_f1': val_metrics['f1'],
+                    'val_precision': val_metrics['precision'],
+                    'val_recall': val_metrics['recall']
+                }, step=epoch)
+                
+                # Save best model
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    self._save_model('best_model.pth')
+                    mlflow.pytorch.log_model(self.model, "model")
+                
+                # Early stopping check
+                if self.early_stopping:
+                    self.early_stopping(val_loss)
+                    if self.early_stopping.should_stop:
+                        print(f"Early stopping at epoch {epoch+1}")
+                        break
+                
+                # Learning rate scheduling
+                self.scheduler.step(val_loss)
+                
+                print(f"Epoch {epoch+1}/{epochs} - "
+                      f"Train Loss: {train_loss:.4f}, "
+                      f"Val Loss: {val_loss:.4f}, "
+                      f"Val Acc: {val_acc:.4f}")
+            
+            return history
     
-    for inputs, targets in tqdm(data_loader, desc="Training", leave=False):
-        optimizer.zero_grad()
+    def _train_epoch(self, train_loader):
+        """Train for one epoch"""
+        self.model.train()
+        total_loss = 0.0
         
-        inputs = inputs.to(device)
-        targets = targets.to(device)
+        for images, labels in train_loader:
+            images, labels = images.to(self.device), labels.to(self.device)
+            
+            self.optimizer.zero_grad()
+            outputs = self.model(images)
+            loss = self.criterion(outputs, labels)
+            loss.backward()
+            self.optimizer.step()
+            
+            total_loss += loss.item()
         
-        # Forward pass
-        output = model(inputs)
-        
-        # 1. Metric Learning Loss - Find hard pairs using MultiSimilarityMiner
-        hard_pairs = miners.MultiSimilarityMiner()(output, targets)
-        metric_l = metric_loss(output, targets, hard_pairs)
-        
-        # 2. Classification Loss - Standard cross-entropy
-        class_l = loss_fn(output, targets)
-        
-        # Combined loss
-        loss = metric_l + class_l
-        
-        # Backward pass and optimization
-        loss.backward()
-        optimizer.step()
-        
-        # Track metrics
-        training_loss += loss.data.item() * inputs.size(0)
-        _, predicted = torch.max(output, 1)
-        total += targets.size(0)
-        correct += (predicted == targets).sum().item()
-    
-    return training_loss / len(data_loader.dataset), correct / total`
+        return total_loss / len(train_loader)`
 		},
 		{
-			name: 'ResNet50 Transfer Learning',
-			filename: 'resnet_transfer.py',
+			name: 'FastAPI Production Deployment',
+			filename: 'api/main.py',
 			language: 'python',
 			code: `"""
-Transfer Learning with ResNet50
-Adapts pretrained ImageNet model for 10-class animal classification
+FastAPI REST API for Animal Classification
+Provides prediction endpoints with health checks and batch support
 """
 
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import List, Dict
 import torch
-import torch.nn as nn
-from torchvision import models
+from PIL import Image
+import io
 
-# Load pretrained ResNet50
-res_model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+from src.evaluation.predictor import Predictor
+from src.utils.config import load_config
 
-# Freeze all base layers to preserve ImageNet features
-for params in res_model.parameters():
-    params.requires_grad = False
-
-# Replace the final classification layer
-# ResNet50 outputs 2048 features -> Custom head for 10 classes
-torch.manual_seed(42)
-torch.cuda.manual_seed(42)
-
-in_features = res_model.fc.in_features  # 2048
-
-modified_last_layer = nn.Sequential(
-    nn.Linear(in_features, 256),
-    nn.ReLU(),
-    nn.Dropout(p=0.5),
-    nn.Linear(256, 10)  # 10 animal classes
+app = FastAPI(
+    title="Animal Classification API",
+    description="Production ML API for multiclass animal image classification",
+    version="1.0.0"
 )
 
-# Assign the new head
-res_model.fc = modified_last_layer
+# Global variables
+predictor = None
+config = None
 
-# Move to GPU if available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-res_model = res_model.to(device)
+class PredictionResponse(BaseModel):
+    """Response model for predictions"""
+    predicted_class: str
+    confidence: float
+    top_predictions: List[Dict[str, float]]
 
-print(f"Model loaded on {device}")
-print(f"Trainable parameters: {sum(p.numel() for p in res_model.parameters() if p.requires_grad):,}")
+class HealthResponse(BaseModel):
+    """Response model for health check"""
+    status: str
+    model_loaded: bool
+    device: str
 
-# Result: Only ~131K trainable params (head only) vs 25M total params`
+@app.on_event("startup")
+async def startup_event():
+    """Load model on startup"""
+    global predictor, config
+    
+    try:
+        config = load_config("configs/config.yaml")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model_path = config["api"]["model_path"]
+        
+        predictor = Predictor.load_predictor(model_path, config, device)
+        print(f"✅ Model loaded successfully on {device}")
+        
+    except Exception as e:
+        print(f"❌ Error loading model: {e}")
+        predictor = None
+
+@app.get("/", response_model=dict)
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "Animal Classification API",
+        "version": "1.0.0",
+        "endpoints": {
+            "health": "/health",
+            "predict": "/predict",
+            "predict_batch": "/predict/batch",
+            "classes": "/classes"
+        },
+        "docs": "/docs"
+    }
+
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    """Check API and model health"""
+    return HealthResponse(
+        status="healthy" if predictor else "degraded",
+        model_loaded=predictor is not None,
+        device=str(predictor.device) if predictor else "unknown"
+    )
+
+@app.post("/predict", response_model=PredictionResponse)
+async def predict(file: UploadFile = File(...)):
+    """
+    Predict animal class from uploaded image
+    
+    Args:
+        file: Image file (JPG, PNG)
+        
+    Returns:
+        Prediction with confidence scores
+    """
+    if predictor is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    
+    try:
+        # Read and process image
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data)).convert('RGB')
+        
+        # Make prediction
+        result = predictor.predict_single(image, top_k=3)
+        
+        return PredictionResponse(
+            predicted_class=result['predicted_class'],
+            confidence=result['confidence'],
+            top_predictions=result['top_predictions']
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/predict/batch")
+async def predict_batch(files: List[UploadFile] = File(...)):
+    """Batch prediction for multiple images"""
+    if predictor is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    
+    results = []
+    for file in files:
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data)).convert('RGB')
+        result = predictor.predict_single(image)
+        results.append({
+            "filename": file.filename,
+            "prediction": result
+        })
+    
+    return {"predictions": results, "count": len(results)}
+
+@app.get("/classes")
+async def get_classes():
+    """Get supported animal classes"""
+    if config:
+        return {"classes": config['data']['class_names']}
+    return {"classes": []}`
+		},
+		{
+			name: 'Docker Compose MLOps Stack',
+			filename: 'docker-compose.yml',
+			language: 'yaml',
+			code: `# ==================================================
+# Animal Classification MLOps - Docker Compose
+# Services: FastAPI + MLflow
+# ==================================================
+
+version: '3.8'
+
+services:
+  # FastAPI Application
+  api:
+    build: .
+    container_name: animal-classification-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./data/predictions:/app/data/predictions
+    environment:
+      - PYTHONPATH=/app
+      - CUDA_VISIBLE_DEVICES=\${CUDA_VISIBLE_DEVICES:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - animal-classification-network
+
+  # MLflow Tracking Server
+  mlflow:
+    image: python:3.9-slim
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+      - ./mlartifacts:/mlflow/mlartifacts
+    command: >
+      sh -c "pip install mlflow &&
+      mlflow server
+      --backend-store-uri file:///mlflow/mlruns
+      --default-artifact-root file:///mlflow/mlartifacts
+      --host 0.0.0.0
+      --port 5000"
+    restart: unless-stopped
+    networks:
+      - animal-classification-network
+
+networks:
+  animal-classification-network:
+    name: animal-classification-network
+    driver: bridge
+
+# Usage:
+# docker-compose up -d              # Start all services
+# docker-compose logs -f api        # View API logs
+# docker-compose down               # Stop all services
+#
+# Access:
+# - API:        http://localhost:8000
+# - API Docs:   http://localhost:8000/docs
+# - MLflow UI:  http://localhost:5000`
+		},
+		{
+			name: 'Configuration Management',
+			filename: 'configs/config.yaml',
+			language: 'yaml',
+			code: `# ==================================================
+# Animal Classification MLOps Configuration
+# Central configuration for training, evaluation, and deployment
+# ==================================================
+
+# Project settings
+project:
+  name: "animal-classification"
+  description: "Multiclass animal image classification using CNNs"
+  version: "1.0.0"
+  random_seed: 42
+
+# Data settings
+data:
+  raw_data_path: "data/raw"
+  processed_data_path: "data/processed"
+  dataset_name: "animal-image-dataset-90-different-animals"
+  num_classes: 10  # First 10 classes
+  class_names:
+    - "antelope"
+    - "badger"
+    - "bat"
+    - "bear"
+    - "bee"
+    - "beetle"
+    - "bison"
+    - "boar"
+    - "butterfly"
+    - "cat"
+  test_size: 0.2
+  val_size: 0.2
+  image_size: [224, 224]
+  
+# Data augmentation
+augmentation:
+  train:
+    horizontal_flip: true
+    rotation_degrees: 10
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+    normalize: true
+  test:
+    normalize: true
+
+# Model settings
+model:
+  architecture: "resnet50"  # Options: resnet50, cnn_dual, cnn_single
+  pretrained: true
+  freeze_backbone: false
+  dropout_rate: 0.5
+
+# Training settings
+training:
+  batch_size: 32
+  epochs: 50
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  num_workers: 4
+  
+  # Optimizer
+  optimizer:
+    type: "adam"
+    betas: [0.9, 0.999]
+    eps: 1.0e-08
+  
+  # Learning rate scheduler
+  scheduler:
+    type: "reduce_on_plateau"
+    mode: "min"
+    factor: 0.5
+    patience: 5
+    min_lr: 1.0e-07
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.001
+    monitor: "val_loss"
+
+# MLflow settings
+mlflow:
+  tracking_uri: "mlruns"
+  experiment_name: "animal-classification"
+  artifact_location: "mlartifacts"
+  tags:
+    project: "animal-classification-mlops"
+    team: "ml-team"
+
+# API settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  model_path: "models/best_model.pth"
+  allowed_extensions: [".jpg", ".jpeg", ".png"]
+  max_image_size: 10485760  # 10MB
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_file: "logs/training.log"`
 		}
 	],
 	'sentiment-analysis': [
