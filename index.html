@@ -2098,7 +2098,7 @@
 				<div class="projects-grid">
 					<div class="project-card" data-category="ml" data-project="gmv-forecasting">
 						<div class="project-image">
-							<img src="images/GMV_Forecasting_Weighted_Hybrid_model.png" alt="GMV Forecasting MLOps - Production ML Pipeline" />
+							<img src="images/GMV_Forecasting_Weighted_Hybrid_model.png" alt="GMV Forecasting - Production ML Pipeline" />
 							<div class="project-overlay">
 								<div class="project-overlay-content">
 									<button class="view-details-btn">Summary</button>
@@ -2114,7 +2114,7 @@
 							</div>
 						</div>
 						<div class="project-content">
-							<h3 class="project-title">GMV Forecasting MLOps - Production ML Pipeline</h3>
+							<h3 class="project-title">GMV Forecasting - Production ML Pipeline</h3>
 							<p class="project-description">
 								Production-ready ML pipeline with full lifecycle implementation: data preparation, model training (SARIMAX + Prophet hybrid), API deployment, and monitoring with MLflow, Docker, and Prometheus.
 							</p>
@@ -2161,36 +2161,38 @@
 						</div>
 					</div>
 					
-					<div class="project-card" data-category="ml" data-project="multiclass-cnn">
-						<div class="project-image">
-							<img src="images/Multiclass_Classification.png" alt="Multiclass Classification with CNN" />
-							<div class="project-overlay">
-								<div class="project-overlay-content">
-									<button class="view-details-btn">Summary</button>
-									<div class="project-links">
-										<a href="https://github.com/hungthinh005/python-projects/blob/main/Multiclass%20Classification%20CNN.ipynb" target="_blank" title="GitHub">
-											<i class="fab fa-github"></i>
-										</a>
-										<!-- <a href="https://github.com/hungthinh005/python-projects/blob/main/Multiclass%20Classification%20CNN.ipynb" target="_blank" title="View Code">
-											<i class="fas fa-external-link-alt"></i>
-										</a> -->
-									</div>
+				<div class="project-card" data-category="ml" data-project="multiclass-cnn">
+					<div class="project-image">
+						<img src="images/Multiclass_Classification.png" alt="Animal Classification - Production ML Pipeline" />
+						<div class="project-overlay">
+							<div class="project-overlay-content">
+								<button class="view-details-btn">Summary</button>
+								<div class="project-links">
+									<a href="https://github.com/hungthinh005/animal-classification-mlops" target="_blank" title="GitHub">
+										<i class="fab fa-github"></i>
+									</a>
+									<!-- <a href="https://github.com/hungthinh005/animal-classification-mlops" target="_blank" title="Live Demo">
+										<i class="fas fa-external-link-alt"></i>
+									</a> -->
 								</div>
 							</div>
 						</div>
-						<div class="project-content">
-							<h3 class="project-title">Multiclass Classification with CNN</h3>
-							<p class="project-description">
-								Demonstrates how architectural choices significantly impact model performance, with the simpler CNN design achieving better results.
-							</p>
-							<div class="project-tech">
-								<span class="tech-tag">Python</span>
-								<span class="tech-tag">TensorFlow</span>
-								<span class="tech-tag">CNN</span>
-								<span class="tech-tag">Computer Vision</span>
-							</div>
+					</div>
+					<div class="project-content">
+						<h3 class="project-title">Animal Classification - Production ML Pipeline</h3>
+						<p class="project-description">
+							Production-ready image classification system using CNNs and Transfer Learning with complete MLOps infrastructure: model training (ResNet-50, Custom CNNs), API deployment, and monitoring with MLflow and Docker.
+						</p>
+						<div class="project-tech">
+							<span class="tech-tag">MLOps</span>
+							<span class="tech-tag">Docker</span>
+							<span class="tech-tag">FastAPI</span>
+							<span class="tech-tag">MLflow</span>
+							<span class="tech-tag">PyTorch</span>
+							<span class="tech-tag">ResNet-50</span>
 						</div>
 					</div>
+				</div>
 
 					<!-- <div class="project-card" data-category="ml" data-project="song-recommendation">
 						<div class="project-image">
@@ -2774,7 +2776,7 @@
 				'gmv-forecasting': {
 					title: 'GMV Forecasting MLOps - Production ML Pipeline',
 					subtitle: 'Full ML Lifecycle: Training, Deployment, Monitoring & API Service',
-					tech: ['Python', 'MLflow', 'Docker', 'FastAPI', 'SARIMAX', 'Prophet', 'Prometheus', 'Grafana'],
+					tech: ['Python', 'MLflow', 'Docker', 'FastAPI', 'SARIMAX', 'Prophet', 'Prometheus', 'Grafana', 'PostgreSQL', 'Redis'],
 					codeSnippetsId: 'gmv-forecasting', // Reference to external code snippets
 					overview: `
 						<p>A production-ready machine learning pipeline demonstrating the complete ML lifecycle from data preparation to model deployment and monitoring. This project evolved from a Jupyter notebook prototype into a fully operationalized MLOps system.</p>
@@ -2814,39 +2816,50 @@
 						{ url: 'https://github.com/hungthinh005/gmv-forecasting-mlops#readme', text: 'Documentation', icon: 'fas fa-book' }
 					]
 				},
-				'multiclass-cnn': {
-					title: 'Multiclass Classification with CNN',
-					subtitle: 'Deep Learning for Animal Image Classification',
-					tech: ['Python', 'PyTorch', 'CNN', 'Computer Vision', 'Transfer Learning', 'Metric Learning', 'ResNet50'],
-					codeSnippetsId: 'multiclass-cnn', // Reference to external code snippets
-					overview: `
-						<p>This project demonstrates the power of Convolutional Neural Networks (CNNs) for multiclass image classification tasks. The goal was to classify images of different animal species with high accuracy while exploring the impact of architectural choices on model performance.</p>
-						<p>The project includes comprehensive experimentation with different CNN architectures, data augmentation techniques, and optimization strategies to achieve optimal results.</p>
-					`,
-					technical: `
-						<ul>
-							<li><strong>Data Preprocessing:</strong> Image normalization, resizing, and comprehensive data augmentation (rotation, zoom, flip, brightness adjustment)</li>
-							<li><strong>CNN Architecture:</strong> Multiple convolutional layers with batch normalization, dropout for regularization, and global average pooling</li>
-							<li><strong>Transfer Learning:</strong> Experimentation with pre-trained models (VGG16, ResNet50) and custom architectures</li>
-							<li><strong>Optimization:</strong> Adam optimizer with learning rate scheduling and early stopping mechanisms</li>
-							<li><strong>Performance Monitoring:</strong> Comprehensive tracking of training/validation metrics and visualization of learning curves</li>
-						</ul>
-					`,
-					results: `
-						<ul>
-							<li><strong>Classification Accuracy:</strong> Achieved 85%+ accuracy on test dataset with 90 animal classes</li>
-							<li><strong>Architecture Insights:</strong> Demonstrated that simpler architectures often outperform complex ones on constrained datasets</li>
-							<li><strong>Generalization:</strong> Model shows strong performance across diverse animal categories</li>
-							<li><strong>Efficiency:</strong> Optimized model size while maintaining high accuracy for practical deployment</li>
-						</ul>
-					`,
-					images: [
-						{ src: 'images/Multiclass_Classification.png', caption: 'CNN Architecture and Classification Results' }
-					],
-					links: [
-						{ url: 'https://github.com/hungthinh005/python-projects/blob/main/Multiclass%20Classification%20CNN.ipynb', text: 'View on GitHub', icon: 'fab fa-github' }
-					]
-				},
+			'multiclass-cnn': {
+				title: 'Animal Classification MLOps - Production ML Pipeline',
+				subtitle: 'End-to-End MLOps for Image Classification with CNNs & Transfer Learning',
+				tech: ['Python', 'PyTorch', 'MLOps', 'Docker', 'FastAPI', 'MLflow', 'ResNet-50', 'Transfer Learning', 'CI/CD'],
+				codeSnippetsId: 'multiclass-cnn', // Reference to external code snippets
+				overview: `
+					<p>A production-ready MLOps system for multiclass animal image classification demonstrating the complete ML lifecycle from data preparation to model deployment and monitoring. This project evolved from a Jupyter notebook prototype into a fully operationalized system with multiple model architectures.</p>
+					<p>The solution implements ResNet-50 transfer learning achieving 98% accuracy, along with custom CNN architectures, all packaged in a scalable MLOps infrastructure with experiment tracking, containerization, and REST API deployment.</p>
+					<p><strong>Key Achievement:</strong> Transformed a research notebook into a production-grade classification system with automated training pipelines, FastAPI deployment, comprehensive testing, and CI/CD workflows.</p>
+				`,
+				technical: `
+					<ul>
+						<li><strong>ML Pipeline Architecture:</strong> Modular design with separate data processing, model training, evaluation, and deployment components following MLOps best practices</li>
+						<li><strong>Multiple Model Architectures:</strong> ResNet-50 with transfer learning (98% accuracy), CNNDualConv (65% accuracy), and CNNSingleConv (45% accuracy) for architecture comparison</li>
+						<li><strong>Transfer Learning:</strong> Pre-trained ResNet-50 on ImageNet with fine-tuning on 10-class animal dataset, achieving state-of-the-art performance</li>
+						<li><strong>Data Pipeline:</strong> Automated preprocessing with image augmentation (rotation, flip, color jitter), normalization, and train/test splitting supporting 90 animal classes</li>
+						<li><strong>Experiment Tracking (MLflow):</strong> Automated logging of hyperparameters, metrics (accuracy, F1-score, precision, recall), model artifacts, and confusion matrices for reproducibility</li>
+						<li><strong>API Deployment (FastAPI):</strong> RESTful API with Pydantic validation, health checks, single/batch prediction endpoints, and interactive Swagger documentation</li>
+						<li><strong>Containerization (Docker):</strong> Multi-service architecture with Docker Compose orchestrating API and MLflow services with proper volume management</li>
+						<li><strong>Training Infrastructure:</strong> PyTorch implementation with early stopping, learning rate scheduling, combined loss functions (Cross-entropy + Triplet margin), and GPU acceleration</li>
+						<li><strong>Testing & Quality:</strong> Comprehensive test suite using pytest covering data processing, model training, evaluation, and API endpoints with 80%+ coverage</li>
+						<li><strong>CI/CD Pipeline:</strong> GitHub Actions workflows for automated testing, linting (black, flake8), and Docker image builds ensuring code quality</li>
+					</ul>
+				`,
+				results: `
+					<ul>
+						<li><strong>Model Performance:</strong> ResNet-50 achieved 98% accuracy and 0.97 F1-score on 10-class classification, outperforming custom CNNs significantly</li>
+						<li><strong>Training Efficiency:</strong> GPU-accelerated training completes in 15 minutes for ResNet-50 (50 epochs), 20 minutes for CNNDualConv, demonstrating optimized implementation</li>
+						<li><strong>Production Deployment:</strong> Dockerized FastAPI serving predictions with sub-second response time, supporting single and batch inference with proper error handling</li>
+						<li><strong>Experiment Management:</strong> MLflow tracking 15+ training runs with complete reproducibility of model artifacts, metrics, and hyperparameters across architectures</li>
+						<li><strong>Scalability:</strong> Containerized architecture supports horizontal scaling, multi-class extension (up to 90 classes), and independent service updates without downtime</li>
+						<li><strong>MLOps Maturity:</strong> Demonstrates end-to-end ML lifecycle including data versioning, model registry, automated training workflows, and API monitoring infrastructure</li>
+						<li><strong>Code Quality:</strong> Production-ready codebase with modular design, comprehensive documentation, unit tests, and CI/CD automation following software engineering best practices</li>
+						<li><strong>API Features:</strong> Interactive Swagger UI, health check endpoints, batch prediction support, and detailed error responses for production use</li>
+					</ul>
+				`,
+				images: [
+					{ src: 'images/Multiclass_Classification.png', caption: 'MLOps Architecture & Model Performance Comparison' }
+				],
+				links: [
+					{ url: 'https://github.com/hungthinh005/animal-classification-mlops', text: 'View on GitHub', icon: 'fab fa-github' },
+					{ url: 'https://github.com/hungthinh005/animal-classification-mlops#readme', text: 'Documentation', icon: 'fas fa-book' }
+				]
+			},
 				'song-recommendation': {
 					title: 'Song Recommendation Engine',
 					subtitle: 'ML-Powered Music Discovery Platform',
@@ -3237,4 +3250,3 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
 	</body>
 </html>
-
