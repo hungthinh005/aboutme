@@ -434,22 +434,26 @@
 
 			/* Company-specific timeline dots */
 			.timeline-item:nth-child(1) .timeline-dot {
-				background: #00B04F; /* Grab */
+				background: #1E88E5; /* Eplus Reseach */
 			}
 
 			.timeline-item:nth-child(2) .timeline-dot {
-				background: #1E88E5; /* Unilever */
+				background: #00B04F; /* Grab */
 			}
 
 			.timeline-item:nth-child(3) .timeline-dot {
-				background: #FF6B35; /* FWD Insurance */
+				background: #1E88E5; /* Unilever */
 			}
 
 			.timeline-item:nth-child(4) .timeline-dot {
-				background: #77b3e7; /* Logivan */
+				background: #FF6B35; /* FWD Insurance */
 			}
 
 			.timeline-item:nth-child(5) .timeline-dot {
+				background: #77b3e7; /* Logivan */
+			}
+
+			.timeline-item:nth-child(6) .timeline-dot {
 				background: #1E88E5; /* University */
 			}
 
@@ -460,6 +464,10 @@
 			}
 
 			/* Company-specific job title colors */
+			.job-title.eplus {
+				color: #1E88E5; /* Eplus Reseach's signature green */
+			}
+
 			.job-title.grab {
 				color: #00B04F; /* Grab's signature green */
 			}
@@ -510,6 +518,10 @@
 			}
 
 			/* Company-specific colors */
+			.job-company.eplus {
+				color: #1E88E5; /* Grab's signature green */
+			}
+
 			.job-company.grab {
 				color: #00B04F; /* Grab's signature green */
 			}
@@ -2319,6 +2331,32 @@
 				<p class="section-subtitle">My professional journey</p>
 				<div class="timeline">
 
+					<!-- Job: Data Scientist at Eplus Research  -->
+					<div class="timeline-item">
+						<div class="timeline-row">
+							<div class="timeline-info">
+								<div class="timeline-dot"></div>
+								<div class="timeline-meta">
+									<h3 class="job-title eplus">Data Scientist</h3>
+									<h4 class="job-company eplus">
+										<img src="https://media.licdn.com/dms/image/v2/D560BAQEfgOotHElG9A/company-logo_100_100/B56ZgskiaNH0AQ-/0/1753094433203/congtyeplus_vn_logo?e=1775692800&v=beta&t=qme1hoSOl6CjLN8TEw0dczOE32CpHlY7-60k03cVpJk" alt="eplus Logo" class="company-logo">
+										Eplus Reseach
+									</h4>
+									<p class="job-period">Jan 2026 - Current</p>
+								</div>
+							</div>
+							<div class="timeline-details">
+								<div class="job-description">
+									<ul>
+										<li>Pharmacy Potential Scoring & Strategic Segmentation: Developed a robust scoring engine to segment 12,000+ pharmacies. By identifying high-value clusters, the model optimized sales resource allocation by 15%, shifting focus toward top-tier leads and significantly increasing acquisition efficiency through tailored commercial strategies.</li>
+										<li>Automated Vaccine Recommendation Engine: Architected a behavioral recommendation model for VNVC voucher holders, which predicts and suggests the most relevant "next-dose" vaccines. This automated personalization increased voucher redemption rates by 5% through targeted SMS triggers.</li>
+										<li>Sales Force Effectiveness Diagnostic: Conducted comprehensive diagnostic analytics on pharmaceutical representative routing and performance. Identified that supervisor visits yielded a 23% higher conversion rate than solo visits, leading to a restructured supervision strategy that improved overall field productivity by 35%.</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+
 					<!-- Job: Data Analyst at Grab -->
 					<div class="timeline-item">
 						<div class="timeline-row">
@@ -2330,17 +2368,17 @@
 										<img src="https://toppng.com/uploads/preview/grab-logo-11550724942n0ghhh9o1u.png" alt="Grab Logo" class="company-logo">
 										Grab
 									</h4>
-									<p class="job-period">Nov 2023 - Present</p>
+									<p class="job-period">Nov 2023 - Jan 2026</p>
 								</div>
 							</div>
 							<div class="timeline-details">
 								<div class="job-description">
 									<ul>
-										<li>Machine Learning & Forecasting: Delivered detection model for driver counting and safety equipment (e.g., missing gear detection), achieving ~92% precision, and forecasting model for Gross Merchandise Volume (GMV) with ~4% MAPE. Outputs were automated and written into a team-managed delta table for business visibility.</li>
+										<li>Machine Learning & Forecasting: Developed machine learning models in Databricks to enhance operational decision-making. Delivered a driver safety gear classification model (e.g., detecting missing equipment) with ~92% precision, and a GMV forecasting model with ~4% MAPE. Outputs were automated and integrated into internal data systems for business visibility.</li>
 										<li>Data Engineering & Automation: Developed and scheduled data pipelines in Databricks using SQL (Presto/Trino), PySpark, and Python to streamline reporting and analytics. Automated workflows to support high-volume data processes and reduce manual intervention.</li>
 										<li>Data Quality & Reliability: Implemented robust data quality checks and source validation mechanisms, significantly improving consistency and reducing the need for manual preprocessing in downstream workflows.</li>
 										<li>Data Visualization & Reporting: Designed Power BI dashboards for regional performance reviews, enabling data-driven decisions across teams. Enhanced reporting efficiency by automating processes, reducing manual effort by over 70%.</li>
-										<li>Cross-functional Collaboration: Partnered with Finance, Operations, Planning, and Strategy teams to identify challenges and deliver impactful data solutions (in-depth analysis, insights, automation workflow, and dashboards).</li>
+										<li>Cross-functional Collaboration: Partnered with Finance, Operations, and Strategy teams to identify challenges and deliver impactful data solutions (ad-hoc analyses, insights, and dashboards).</li>
 									</ul>
 								</div>
 							</div>
@@ -2581,7 +2619,7 @@
 							</div>
 							<div class="contact-details">
 								<h4>Resume</h4>
-								<p><a href="https://drive.google.com/file/d/100GSRREB0GHmhk4MJmvhhfAwcbELCyrj/view?usp=sharing" target="_blank">Download CV</a></p>
+								<p><a href="https://drive.google.com/file/d/1pXBz-iimTJUO-Ad6-7IGMb03zHQX_gc8/view?usp=sharing" target="_blank">Download CV</a></p>
 							</div>
 						</div>
 					</div>
@@ -3250,6 +3288,3 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
 	</body>
 </html>
-
-
-
