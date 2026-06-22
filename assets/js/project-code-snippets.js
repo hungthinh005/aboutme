@@ -4,12 +4,131 @@
  */
 
 const projectCodeSnippets = {
-	'gmv-forecasting': [
-		{
-			name: 'ML Pipeline with MLflow Tracking',
-			filename: 'src/models/train.py',
-			language: 'python',
-			code: `"""
+  'customer-journey': [
+    {
+      name: 'Churn Prediction (BG/NBD + Gamma-Gamma)',
+      filename: 'models/churn/train_bgnbd.py',
+      language: 'python',
+      code: `import pandas as pd
+from lifetimes import BetaGeoFitter, GammaGammaFitter
+
+def train_churn_model(summary_data):
+    # 1. Fit BG/NBD model to predict "alive" probability
+    bgf = BetaGeoFitter(penalizer_coef=0.001)
+    bgf.fit(summary_data['frequency'], summary_data['recency'], summary_data['T'])
+    
+    # 2. Predict probability of customer being alive (1 - churn)
+    summary_data['p_alive'] = bgf.conditional_probability_alive(
+        summary_data['frequency'], summary_data['recency'], summary_data['T']
+    )
+    
+    # 3. Fit Gamma-Gamma model for Monetary Value (CLV)
+    returning_customers = summary_data[summary_data['frequency'] > 0]
+    ggf = GammaGammaFitter(penalizer_coef=0.001)
+    ggf.fit(returning_customers['frequency'], returning_customers['monetary_value'])
+    
+    # 4. Estimate Customer Lifetime Value
+    summary_data['predicted_clv'] = ggf.customer_lifetime_value(
+        bgf, summary_data['frequency'], summary_data['recency'], 
+        summary_data['T'], summary_data['monetary_value'], time=3
+    )
+    return summary_data`
+    },
+    {
+      name: 'Neural Matrix Factorization (PyTorch)',
+      filename: 'models/ranking/train_ranking.py',
+      language: 'python',
+      code: `class NeuMF(nn.Module):
+    """Neural Matrix Factorization with churn-awareness."""
+    def __init__(self, embedding_dim, mlp_dims, churn_feature_dim=1):
+        super().__init__()
+        # GMF Path (Generalized Matrix Factorization)
+        self.gmf_user = nn.Linear(embedding_dim, 64)
+        self.gmf_item = nn.Linear(embedding_dim, 64)
+
+        # MLP Path (Multi-Layer Perceptron)
+        mlp_input = embedding_dim * 2 + churn_feature_dim
+        self.mlp = nn.Sequential(
+            nn.Linear(mlp_input, 128), nn.ReLU(),
+            nn.BatchNorm1d(128), nn.Dropout(0.2),
+            nn.Linear(128, 64), nn.ReLU()
+        )
+
+        # Final prediction layer combining GMF and MLP
+        self.output = nn.Sequential(
+            nn.Linear(64 + 64, 64), nn.ReLU(),
+            nn.Linear(64, 1) # Probability of interaction
+        )
+
+    def forward(self, user_emb, item_emb, churn_prob):
+        gmf_out = self.gmf_user(user_emb) * self.gmf_item(item_emb)
+        mlp_input = torch.cat([user_emb, item_emb, churn_prob.unsqueeze(1)], dim=1)
+        mlp_out = self.mlp(mlp_input)
+
+        combined = torch.cat([gmf_out, mlp_out], dim=1)
+        return self.output(combined).squeeze(1)`
+    },
+    {
+      name: 'Multi-Stage Inference Pipeline',
+      filename: 'api/inference.py',
+      language: 'python',
+      code: `def predict(self, customer_id, top_k=10, use_llm=False):
+    """Orchestrates the full retention pipeline."""
+    # Step 1: Churn prediction (Risk Assessment)
+    churn_result = self.get_churn_prediction(customer_id)
+    churn_prob = churn_result["churn_probability"]
+
+    # Step 2: Vector Retrieval (Candidate Generation)
+    candidates, _ = self.get_candidates(customer_id, top_n=100)
+
+    # Step 3: Neural Ranking (Personalization)
+    ranked_items, ranked_scores = self.rank_candidates(
+        customer_id, candidates, churn_prob, top_k
+    )
+
+    # Step 4: Decision Layer (Actionable Insights)
+    risk_level = "HIGH" if churn_prob > 0.7 else "MEDIUM" if churn_prob > 0.4 else "LOW"
+    action = "Send 20% Discount" if risk_level == "HIGH" else "Send Catalog Update"
+
+    return {
+        "customer_id": customer_id,
+        "churn_probability": churn_prob,
+        "risk_level": risk_level,
+        "recommendations": ranked_items,
+        "suggested_action": action
+    }`
+    },
+    {
+      name: 'Fast Vector Search (FAISS)',
+      filename: 'api/inference.py',
+      language: 'python',
+      code: `import faiss
+
+def get_candidates(self, customer_id, top_n=100):
+    """Retrieve top-N candidates using Approximate Nearest Neighbors."""
+    user_idx = self.retrieval_mappings["user_to_idx"].get(customer_id)
+    if user_idx is None: return [], []
+
+    # Get user embedding and normalize for cosine similarity
+    user_emb = self.user_embeddings[user_idx].reshape(1, -1).astype('float32')
+    faiss.normalize_L2(user_emb)
+
+    # Search the pre-built FAISS index
+    distances, indices = self.faiss_index.search(user_emb, top_n)
+
+    # Map indices back to product StockCodes
+    idx_to_item = self.retrieval_mappings["idx_to_item"]
+    items = [idx_to_item[int(i)] for i in indices[0] if i >= 0]
+
+    return items, distances[0].tolist()`
+    }
+  ],
+  'gmv-forecasting': [
+    {
+      name: 'ML Pipeline with MLflow Tracking',
+      filename: 'src/models/train.py',
+      language: 'python',
+      code: `"""
 Production ML Training Pipeline with MLflow Experiment Tracking
 Trains hybrid SARIMAX + Prophet model with automated logging
 """
@@ -96,12 +215,12 @@ for city in cities:
         mlflow.log_artifacts(str(model_path))
         
         print(f"✅ {city}: MAPE={metrics['mape']:.2%}")`
-		},
-		{
-			name: 'Hybrid Model with Weight Optimization',
-			filename: 'src/models/hybrid_model.py',
-			language: 'python',
-			code: `"""
+    },
+    {
+      name: 'Hybrid Model with Weight Optimization',
+      filename: 'src/models/hybrid_model.py',
+      language: 'python',
+      code: `"""
 Weighted Hybrid Model: SARIMAX + Prophet
 Optimizes ensemble weights using validation data
 """
@@ -189,12 +308,12 @@ class HybridForecaster:
             'sarimax': sarimax_preds,
             'prophet': prophet_preds
         }`
-		},
-		{
-			name: 'FastAPI Production Deployment',
-			filename: 'src/api/main.py',
-			language: 'python',
-			code: `"""
+    },
+    {
+      name: 'FastAPI Production Deployment',
+      filename: 'src/api/main.py',
+      language: 'python',
+      code: `"""
 FastAPI RESTful API for Model Serving
 Provides prediction endpoints with Prometheus monitoring
 """
@@ -295,12 +414,12 @@ def metrics():
     return generate_latest()
 
 # Run with: uvicorn src.api.main:app --reload --port 8000`
-		},
-		{
-			name: 'Docker Compose Orchestration',
-			filename: 'deployment/docker-compose.yml',
-			language: 'yaml',
-			code: `# ==================================================
+    },
+    {
+      name: 'Docker Compose Orchestration',
+      filename: 'deployment/docker-compose.yml',
+      language: 'yaml',
+      code: `# ==================================================
 # Docker Compose - Full MLOps Stack
 # Services: API, MLflow, PostgreSQL, Redis, Prometheus, Grafana
 # ==================================================
@@ -421,12 +540,12 @@ networks:
 # Access API: http://localhost:8000
 # Access MLflow: http://localhost:5001
 # Access Grafana: http://localhost:3000`
-		},
-		{
-			name: 'Configuration Management',
-			filename: 'config/config.yaml',
-			language: 'yaml',
-			code: `# ==================================================
+    },
+    {
+      name: 'Configuration Management',
+      filename: 'config/config.yaml',
+      language: 'yaml',
+      code: `# ==================================================
 # GMV Forecasting MLOps Configuration
 # Central configuration for all pipeline components
 # ==================================================
@@ -521,14 +640,14 @@ models:
   save_path: "models/"
   format: "pickle"
   versioning: true`
-		}
-	],
-	'analytics-engineer': [
-		{
-			name: 'ETL Transform (Python)',
-			filename: 'src/etl/transform.py',
-			language: 'python',
-			code: `"""
+    }
+  ],
+  'analytics-engineer': [
+    {
+      name: 'ETL Transform (Python)',
+      filename: 'src/etl/transform.py',
+      language: 'python',
+      code: `"""
 Transform Module
 Applies business logic and data transformations
 Moves data from staging to core layer
@@ -566,12 +685,12 @@ class DataTransformer:
         except Exception as e:
             self.logger.log_error(f"Transformation failed: {str(e)}")
             raise`
-		},
-		{
-			name: 'SQL Transformation',
-			filename: 'sql/transforms/staging_to_core.sql',
-			language: 'sql',
-			code: `-- ============================================
+    },
+    {
+      name: 'SQL Transformation',
+      filename: 'sql/transforms/staging_to_core.sql',
+      language: 'sql',
+      code: `-- ============================================
 -- ETL: Staging to Core Layer Transformations
 -- Purpose: Clean, validate, and apply business logic
 -- ============================================
@@ -614,12 +733,12 @@ ON CONFLICT (order_id) DO UPDATE SET
     order_status = EXCLUDED.order_status,
     total_amount = EXCLUDED.total_amount,
     dw_updated_at = NOW();`
-		},
-		{
-			name: 'Dimensional Model (SQL)',
-			filename: 'sql/schema/03_create_dimensional_model.sql',
-			language: 'sql',
-			code: `-- ============================================
+    },
+    {
+      name: 'Dimensional Model (SQL)',
+      filename: 'sql/schema/03_create_dimensional_model.sql',
+      language: 'sql',
+      code: `-- ============================================
 -- DIMENSIONAL MODEL (Analytics Schema)
 -- Star Schema Design for Business Intelligence
 -- ============================================
@@ -667,184 +786,525 @@ CREATE TABLE IF NOT EXISTS analytics.dim_customers (
 CREATE INDEX idx_fact_orders_customer ON analytics.fact_orders(customer_key);
 CREATE INDEX idx_fact_orders_date ON analytics.fact_orders(date_key);
 CREATE INDEX idx_dim_customers_current ON analytics.dim_customers(customer_id, is_current);`
-		}
-	],
-	'multiclass-cnn': [
-		{
-			name: 'Custom CNN Architecture',
-			filename: 'model_architecture.py',
-			language: 'python',
-			code: `"""
-VGG-style CNN with Batch Normalization
-Dual-convolution blocks for deep feature learning
+    }
+  ],
+  'multiclass-cnn': [
+    {
+      name: 'Model Factory with Multiple Architectures',
+      filename: 'src/models/model_factory.py',
+      language: 'python',
+      code: `"""
+Model Factory for Animal Classification MLOps
+Supports ResNet-50, CNNDualConv, and CNNSingleConv architectures
 """
 
 import torch
 import torch.nn as nn
+from src.models.resnet_model import ResNetClassifier
+from src.models.cnn_models import CNNDualConv, CNNSingleConv
+from src.utils.logger import setup_logger
 
-def create_conv_block(in_channels, out_channels, kernel_size=3):
-    """
-    Creates a convolutional block with:
-    - 2x Conv2D layers
-    - Batch Normalization after each conv
-    - ReLU activation
-    - MaxPooling for dimensionality reduction
-    """
-    return nn.Sequential(
-        nn.Conv2d(
-            in_channels=in_channels, 
-            out_channels=out_channels, 
-            kernel_size=kernel_size, 
-            padding="same"
-        ),
-        nn.BatchNorm2d(num_features=out_channels),
-        nn.ReLU(),
-        nn.Conv2d(
-            in_channels=out_channels, 
-            out_channels=out_channels, 
-            kernel_size=kernel_size, 
-            padding="same"
-        ), 
-        nn.BatchNorm2d(num_features=out_channels),
-        nn.ReLU(),
-        nn.MaxPool2d(kernel_size=2)
-    )
+logger = setup_logger(__name__)
 
-# Build the complete model
-model = nn.Sequential(
-    # Feature extraction layers
-    create_conv_block(in_channels=3, out_channels=8),
-    create_conv_block(in_channels=8, out_channels=16),
-    create_conv_block(in_channels=16, out_channels=32),
+def create_model(config: dict) -> nn.Module:
+    """
+    Factory function to create model based on configuration
     
-    # Classification head
-    nn.Flatten(),
-    nn.Sequential(
-        nn.Dropout(0.5),
-        nn.Linear(in_features=25088, out_features=512),
-        nn.ReLU(),
-    ),
-    nn.Sequential(
-        nn.Dropout(0.5),
-        nn.Linear(in_features=512, out_features=10),
-    )
+    Args:
+        config: Configuration dictionary with model architecture settings
+        
+    Returns:
+        PyTorch model ready for training
+    """
+    architecture = config['model']['architecture']
+    num_classes = config['data']['num_classes']
+    dropout_rate = config['model'].get('dropout_rate', 0.5)
+    pretrained = config['model'].get('pretrained', True)
+    
+    logger.info(f"Creating model: {architecture}")
+    logger.info(f"Number of classes: {num_classes}")
+    
+    if architecture == 'resnet50':
+        model = ResNetClassifier(
+            num_classes=num_classes,
+            pretrained=pretrained,
+            freeze_backbone=config['model'].get('freeze_backbone', False),
+            dropout_rate=dropout_rate
+        )
+        logger.info(f"ResNet-50 created (pretrained={pretrained})")
+        
+    elif architecture == 'cnn_dual':
+        model = CNNDualConv(
+            num_classes=num_classes,
+            dropout_rate=dropout_rate
+        )
+        logger.info("CNNDualConv created (VGG-style)")
+        
+    elif architecture == 'cnn_single':
+        model = CNNSingleConv(
+            num_classes=num_classes,
+            dropout_rate=dropout_rate
+        )
+        logger.info("CNNSingleConv created (Lightweight)")
+        
+    else:
+        raise ValueError(f"Unknown architecture: {architecture}")
+    
+    # Count parameters
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    logger.info(f"Total parameters: {total_params:,}")
+    logger.info(f"Trainable parameters: {trainable_params:,}")
+    
+    return model
+
+# Example usage:
+# config = load_config('configs/config.yaml')
+# model = create_model(config)  # Returns ResNet-50 by default`
+    },
+    {
+      name: 'Training Pipeline with MLflow',
+      filename: 'src/training/trainer.py',
+      language: 'python',
+      code: `"""
+Production Training Pipeline with MLflow Experiment Tracking
+Supports early stopping, learning rate scheduling, and comprehensive logging
+"""
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import mlflow
+import mlflow.pytorch
+from pathlib import Path
+from src.training.early_stopping import EarlyStopping
+from src.utils.metrics import calculate_metrics
+
+class Trainer:
+    """PyTorch trainer with MLflow integration"""
+    
+    def __init__(self, model, config, device='cuda'):
+        self.model = model.to(device)
+        self.config = config
+        self.device = device
+        
+        # Training components
+        self.optimizer = self._create_optimizer()
+        self.scheduler = self._create_scheduler()
+        self.criterion = nn.CrossEntropyLoss()
+        
+        # Early stopping
+        if config['training']['early_stopping']['enabled']:
+            self.early_stopping = EarlyStopping(
+                patience=config['training']['early_stopping']['patience'],
+                min_delta=config['training']['early_stopping']['min_delta'],
+                mode='min'
+            )
+    
+    def train(self, train_loader, val_loader, epochs):
+        """Main training loop with MLflow tracking"""
+        
+        # Start MLflow run
+        mlflow.set_experiment(self.config['mlflow']['experiment_name'])
+        
+        with mlflow.start_run():
+            # Log hyperparameters
+            mlflow.log_params({
+                'architecture': self.config['model']['architecture'],
+                'num_classes': self.config['data']['num_classes'],
+                'batch_size': self.config['training']['batch_size'],
+                'learning_rate': self.config['training']['learning_rate'],
+                'epochs': epochs,
+                'optimizer': self.config['training']['optimizer']['type']
+            })
+            
+            best_val_loss = float('inf')
+            history = {'train_loss': [], 'val_loss': [], 'val_accuracy': []}
+            
+            for epoch in range(epochs):
+                # Training phase
+                train_loss = self._train_epoch(train_loader)
+                
+                # Validation phase
+                val_loss, val_acc, val_metrics = self._validate(val_loader)
+                
+                # Log to MLflow
+                mlflow.log_metrics({
+                    'train_loss': train_loss,
+                    'val_loss': val_loss,
+                    'val_accuracy': val_acc,
+                    'val_f1': val_metrics['f1'],
+                    'val_precision': val_metrics['precision'],
+                    'val_recall': val_metrics['recall']
+                }, step=epoch)
+                
+                # Save best model
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    self._save_model('best_model.pth')
+                    mlflow.pytorch.log_model(self.model, "model")
+                
+                # Early stopping check
+                if self.early_stopping:
+                    self.early_stopping(val_loss)
+                    if self.early_stopping.should_stop:
+                        print(f"Early stopping at epoch {epoch+1}")
+                        break
+                
+                # Learning rate scheduling
+                self.scheduler.step(val_loss)
+                
+                print(f"Epoch {epoch+1}/{epochs} - "
+                      f"Train Loss: {train_loss:.4f}, "
+                      f"Val Loss: {val_loss:.4f}, "
+                      f"Val Acc: {val_acc:.4f}")
+            
+            return history
+    
+    def _train_epoch(self, train_loader):
+        """Train for one epoch"""
+        self.model.train()
+        total_loss = 0.0
+        
+        for images, labels in train_loader:
+            images, labels = images.to(self.device), labels.to(self.device)
+            
+            self.optimizer.zero_grad()
+            outputs = self.model(images)
+            loss = self.criterion(outputs, labels)
+            loss.backward()
+            self.optimizer.step()
+            
+            total_loss += loss.item()
+        
+        return total_loss / len(train_loader)`
+    },
+    {
+      name: 'FastAPI Production Deployment',
+      filename: 'api/main.py',
+      language: 'python',
+      code: `"""
+FastAPI REST API for Animal Classification
+Provides prediction endpoints with health checks and batch support
+"""
+
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+from typing import List, Dict
+import torch
+from PIL import Image
+import io
+
+from src.evaluation.predictor import Predictor
+from src.utils.config import load_config
+
+app = FastAPI(
+    title="Animal Classification API",
+    description="Production ML API for multiclass animal image classification",
+    version="1.0.0"
 )
 
-# Model summary: 3 conv blocks -> 8->16->32 channels -> Dense(512) -> Output(10)`
-		},
-		{
-			name: 'Training with Metric Learning',
-			filename: 'training_loop.py',
-			language: 'python',
-			code: `"""
-Training Loop with Combined Loss Function
-Uses CrossEntropy + Triplet Margin Loss for better feature learning
-"""
+# Global variables
+predictor = None
+config = None
 
-import torch
-import torch.nn as nn
-from pytorch_metric_learning import losses, miners
-from tqdm.notebook import tqdm
+class PredictionResponse(BaseModel):
+    """Response model for predictions"""
+    predicted_class: str
+    confidence: float
+    top_predictions: List[Dict[str, float]]
 
-def train_epoch(model, optimizer, loss_fn, data_loader, device):
+class HealthResponse(BaseModel):
+    """Response model for health check"""
+    status: str
+    model_loaded: bool
+    device: str
+
+@app.on_event("startup")
+async def startup_event():
+    """Load model on startup"""
+    global predictor, config
+    
+    try:
+        config = load_config("configs/config.yaml")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model_path = config["api"]["model_path"]
+        
+        predictor = Predictor.load_predictor(model_path, config, device)
+        print(f"✅ Model loaded successfully on {device}")
+        
+    except Exception as e:
+        print(f"❌ Error loading model: {e}")
+        predictor = None
+
+@app.get("/", response_model=dict)
+async def root():
+    """Root endpoint with API information"""
+    return {
+        "message": "Animal Classification API",
+        "version": "1.0.0",
+        "endpoints": {
+            "health": "/health",
+            "predict": "/predict",
+            "predict_batch": "/predict/batch",
+            "classes": "/classes"
+        },
+        "docs": "/docs"
+    }
+
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    """Check API and model health"""
+    return HealthResponse(
+        status="healthy" if predictor else "degraded",
+        model_loaded=predictor is not None,
+        device=str(predictor.device) if predictor else "unknown"
+    )
+
+@app.post("/predict", response_model=PredictionResponse)
+async def predict(file: UploadFile = File(...)):
     """
-    Train for one epoch using combined loss:
-    - Metric Loss: Pulls same-class samples together, pushes different-class apart
-    - Classification Loss: Standard cross-entropy for class prediction
+    Predict animal class from uploaded image
+    
+    Args:
+        file: Image file (JPG, PNG)
+        
+    Returns:
+        Prediction with confidence scores
     """
-    training_loss = 0.0
-    correct = 0
-    total = 0
+    if predictor is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
     
-    model.train()
+    try:
+        # Read and process image
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data)).convert('RGB')
+        
+        # Make prediction
+        result = predictor.predict_single(image, top_k=3)
+        
+        return PredictionResponse(
+            predicted_class=result['predicted_class'],
+            confidence=result['confidence'],
+            top_predictions=result['top_predictions']
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/predict/batch")
+async def predict_batch(files: List[UploadFile] = File(...)):
+    """Batch prediction for multiple images"""
+    if predictor is None:
+        raise HTTPException(status_code=503, detail="Model not loaded")
     
-    # Initialize metric loss (Triplet Margin with margin=0.2)
-    metric_loss = losses.TripletMarginLoss(margin=0.2)
+    results = []
+    for file in files:
+        image_data = await file.read()
+        image = Image.open(io.BytesIO(image_data)).convert('RGB')
+        result = predictor.predict_single(image)
+        results.append({
+            "filename": file.filename,
+            "prediction": result
+        })
     
-    for inputs, targets in tqdm(data_loader, desc="Training", leave=False):
-        optimizer.zero_grad()
-        
-        inputs = inputs.to(device)
-        targets = targets.to(device)
-        
-        # Forward pass
-        output = model(inputs)
-        
-        # 1. Metric Learning Loss - Find hard pairs using MultiSimilarityMiner
-        hard_pairs = miners.MultiSimilarityMiner()(output, targets)
-        metric_l = metric_loss(output, targets, hard_pairs)
-        
-        # 2. Classification Loss - Standard cross-entropy
-        class_l = loss_fn(output, targets)
-        
-        # Combined loss
-        loss = metric_l + class_l
-        
-        # Backward pass and optimization
-        loss.backward()
-        optimizer.step()
-        
-        # Track metrics
-        training_loss += loss.data.item() * inputs.size(0)
-        _, predicted = torch.max(output, 1)
-        total += targets.size(0)
-        correct += (predicted == targets).sum().item()
-    
-    return training_loss / len(data_loader.dataset), correct / total`
-		},
-		{
-			name: 'ResNet50 Transfer Learning',
-			filename: 'resnet_transfer.py',
-			language: 'python',
-			code: `"""
-Transfer Learning with ResNet50
-Adapts pretrained ImageNet model for 10-class animal classification
-"""
+    return {"predictions": results, "count": len(results)}
 
-import torch
-import torch.nn as nn
-from torchvision import models
+@app.get("/classes")
+async def get_classes():
+    """Get supported animal classes"""
+    if config:
+        return {"classes": config['data']['class_names']}
+    return {"classes": []}`
+    },
+    {
+      name: 'Docker Compose MLOps Stack',
+      filename: 'docker-compose.yml',
+      language: 'yaml',
+      code: `# ==================================================
+# Animal Classification MLOps - Docker Compose
+# Services: FastAPI + MLflow
+# ==================================================
 
-# Load pretrained ResNet50
-res_model = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
+version: '3.8'
 
-# Freeze all base layers to preserve ImageNet features
-for params in res_model.parameters():
-    params.requires_grad = False
+services:
+  # FastAPI Application
+  api:
+    build: .
+    container_name: animal-classification-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./data/predictions:/app/data/predictions
+    environment:
+      - PYTHONPATH=/app
+      - CUDA_VISIBLE_DEVICES=\${CUDA_VISIBLE_DEVICES:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - animal-classification-network
 
-# Replace the final classification layer
-# ResNet50 outputs 2048 features -> Custom head for 10 classes
-torch.manual_seed(42)
-torch.cuda.manual_seed(42)
+  # MLflow Tracking Server
+  mlflow:
+    image: python:3.9-slim
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+      - ./mlartifacts:/mlflow/mlartifacts
+    command: >
+      sh -c "pip install mlflow &&
+      mlflow server
+      --backend-store-uri file:///mlflow/mlruns
+      --default-artifact-root file:///mlflow/mlartifacts
+      --host 0.0.0.0
+      --port 5000"
+    restart: unless-stopped
+    networks:
+      - animal-classification-network
 
-in_features = res_model.fc.in_features  # 2048
+networks:
+  animal-classification-network:
+    name: animal-classification-network
+    driver: bridge
 
-modified_last_layer = nn.Sequential(
-    nn.Linear(in_features, 256),
-    nn.ReLU(),
-    nn.Dropout(p=0.5),
-    nn.Linear(256, 10)  # 10 animal classes
-)
+# Usage:
+# docker-compose up -d              # Start all services
+# docker-compose logs -f api        # View API logs
+# docker-compose down               # Stop all services
+#
+# Access:
+# - API:        http://localhost:8000
+# - API Docs:   http://localhost:8000/docs
+# - MLflow UI:  http://localhost:5000`
+    },
+    {
+      name: 'Configuration Management',
+      filename: 'configs/config.yaml',
+      language: 'yaml',
+      code: `# ==================================================
+# Animal Classification MLOps Configuration
+# Central configuration for training, evaluation, and deployment
+# ==================================================
 
-# Assign the new head
-res_model.fc = modified_last_layer
+# Project settings
+project:
+  name: "animal-classification"
+  description: "Multiclass animal image classification using CNNs"
+  version: "1.0.0"
+  random_seed: 42
 
-# Move to GPU if available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-res_model = res_model.to(device)
+# Data settings
+data:
+  raw_data_path: "data/raw"
+  processed_data_path: "data/processed"
+  dataset_name: "animal-image-dataset-90-different-animals"
+  num_classes: 10  # First 10 classes
+  class_names:
+    - "antelope"
+    - "badger"
+    - "bat"
+    - "bear"
+    - "bee"
+    - "beetle"
+    - "bison"
+    - "boar"
+    - "butterfly"
+    - "cat"
+  test_size: 0.2
+  val_size: 0.2
+  image_size: [224, 224]
+  
+# Data augmentation
+augmentation:
+  train:
+    horizontal_flip: true
+    rotation_degrees: 10
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+    normalize: true
+  test:
+    normalize: true
 
-print(f"Model loaded on {device}")
-print(f"Trainable parameters: {sum(p.numel() for p in res_model.parameters() if p.requires_grad):,}")
+# Model settings
+model:
+  architecture: "resnet50"  # Options: resnet50, cnn_dual, cnn_single
+  pretrained: true
+  freeze_backbone: false
+  dropout_rate: 0.5
 
-# Result: Only ~131K trainable params (head only) vs 25M total params`
-		}
-	],
-	'sentiment-analysis': [
-		{
-			name: 'Text Preprocessing Pipeline',
-			filename: 'text_preprocessing.py',
-			language: 'python',
-			code: `"""
+# Training settings
+training:
+  batch_size: 32
+  epochs: 50
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  num_workers: 4
+  
+  # Optimizer
+  optimizer:
+    type: "adam"
+    betas: [0.9, 0.999]
+    eps: 1.0e-08
+  
+  # Learning rate scheduler
+  scheduler:
+    type: "reduce_on_plateau"
+    mode: "min"
+    factor: 0.5
+    patience: 5
+    min_lr: 1.0e-07
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    min_delta: 0.001
+    monitor: "val_loss"
+
+# MLflow settings
+mlflow:
+  tracking_uri: "mlruns"
+  experiment_name: "animal-classification"
+  artifact_location: "mlartifacts"
+  tags:
+    project: "animal-classification-mlops"
+    team: "ml-team"
+
+# API settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  model_path: "models/best_model.pth"
+  allowed_extensions: [".jpg", ".jpeg", ".png"]
+  max_image_size: 10485760  # 10MB
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_file: "logs/training.log"`
+    }
+  ],
+  'sentiment-analysis': [
+    {
+      name: 'Text Preprocessing Pipeline',
+      filename: 'text_preprocessing.py',
+      language: 'python',
+      code: `"""
 NLP Text Preprocessing with NLTK
 Tokenization, stopword removal, and lemmatization
 """
@@ -909,12 +1369,12 @@ df = create_sentiment_labels(df)
 print("Sample preprocessed text:")
 print(f"Original: {df['summary'].iloc[0]}")
 print(f"Processed: {df['processed_summary'].iloc[0]}")`
-		},
-		{
-			name: 'TF-IDF Feature Engineering',
-			filename: 'tfidf_vectorization.py',
-			language: 'python',
-			code: `"""
+    },
+    {
+      name: 'TF-IDF Feature Engineering',
+      filename: 'tfidf_vectorization.py',
+      language: 'python',
+      code: `"""
 TF-IDF Vectorization for Text Feature Extraction
 Converts text into numerical features for machine learning
 """
@@ -955,12 +1415,12 @@ print(f"\\nSample features: {feature_names[:20]}")
 # "excellent product quality" 
 # -> [0.0, 0.0, 0.52, ..., 0.31, 0.0, 0.68, ...]
 #    where each value represents word importance`
-		},
-		{
-			name: 'Model Comparison with GridSearchCV',
-			filename: 'model_training.py',
-			language: 'python',
-			code: `"""
+    },
+    {
+      name: 'Model Comparison with GridSearchCV',
+      filename: 'model_training.py',
+      language: 'python',
+      code: `"""
 Machine Learning Model Comparison
 Trains and evaluates 5 different algorithms with hyperparameter tuning
 """
@@ -1045,14 +1505,14 @@ for name, model_info in models.items():
 # Logistic Regression: 0.8290 F1-score (BEST)
 # Multinomial NB: 0.8189 F1-score
 # Linear SVM: 0.8265 F1-score`
-		}
-	],
-	'song-recommendation': [
-		{
-			name: 'K-Means Clustering for Song Grouping',
-			filename: 'clustering_model.py',
-			language: 'python',
-			code: `"""
+    }
+  ],
+  'song-recommendation': [
+    {
+      name: 'K-Means Clustering for Song Grouping',
+      filename: 'clustering_model.py',
+      language: 'python',
+      code: `"""
 K-Means Clustering Algorithm
 Groups songs based on audio features similarity
 """
@@ -1104,12 +1564,12 @@ df['cluster'] = kmeans.fit_predict(X_scaled)
 
 print(f"Songs clustered into {optimal_k} groups")
 print(f"Cluster distribution:\\n{df['cluster'].value_counts().sort_index()}")`
-		},
-		{
-			name: 'Cosine Similarity Recommendation',
-			filename: 'recommendation_engine.py',
-			language: 'python',
-			code: `"""
+    },
+    {
+      name: 'Cosine Similarity Recommendation',
+      filename: 'recommendation_engine.py',
+      language: 'python',
+      code: `"""
 Song Recommendation Engine
 Uses cosine similarity to find similar songs
 """
@@ -1175,12 +1635,12 @@ def get_song_recommendations(song_name, df, n_recommendations=10):
 recommended_songs = get_song_recommendations('Blinding Lights', df, n_recommendations=10)
 print("Recommended Songs:")
 print(recommended_songs)`
-		},
-		{
-			name: 'Streamlit Web Interface',
-			filename: 'app.py',
-			language: 'python',
-			code: `"""
+    },
+    {
+      name: 'Streamlit Web Interface',
+      filename: 'app.py',
+      language: 'python',
+      code: `"""
 Streamlit Web Application
 Interactive UI for Song Recommendation System
 """
@@ -1274,7 +1734,7 @@ with col2:
 # Footer
 st.divider()
 st.caption("Built with Streamlit • Powered by K-Means Clustering")`
-		}
-	]
+    }
+  ]
 };
 
