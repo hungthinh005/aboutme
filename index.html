@@ -1159,31 +1159,93 @@
 		}
 
 		/* Experience timeline */
+		@keyframes dot-pulse {
+			0%   { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 14px rgba(91,157,255,0.4); }
+			50%  { box-shadow: 0 0 0 9px rgba(91,157,255,0.05), 0 0 24px rgba(91,157,255,0.12); }
+			100% { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 14px rgba(91,157,255,0.4); }
+		}
+
+		@keyframes line-travel {
+			0%   { top: 0; opacity: 1; }
+			80%  { opacity: 1; }
+			100% { top: 100%; opacity: 0; }
+		}
+
 		.timeline {
 			position: relative;
 			display: grid;
 			gap: 26px;
 		}
 
+		/* Main vertical rail */
 		.timeline::before {
 			content: "";
 			position: absolute;
 			left: 7px;
-			top: 6px;
-			bottom: 6px;
-			width: 1px;
-			background: linear-gradient(180deg, var(--accent-line), transparent);
+			top: 8px;
+			bottom: 8px;
+			width: 2px;
+			border-radius: 2px;
+			background: linear-gradient(180deg,
+				var(--accent) 0%,
+				rgba(91,157,255,0.45) 40%,
+				rgba(91,157,255,0.12) 80%,
+				transparent 100%
+			);
+			transform-origin: top;
+			transform: scaleY(0);
+			transition: transform 1.6s cubic-bezier(0.16,1,0.3,1);
+		}
+
+		.timeline.line-drawn::before {
+			transform: scaleY(1);
+		}
+
+		/* Travelling glow bead on the line */
+		.timeline::after {
+			content: "";
+			position: absolute;
+			left: 4px;
+			top: 0;
+			width: 8px;
+			height: 40px;
+			border-radius: 4px;
+			background: linear-gradient(180deg, transparent, var(--accent), transparent);
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.timeline.line-drawn::after {
+			animation: line-travel 3s cubic-bezier(0.4,0,0.2,1) 1.6s forwards;
+		}
+
+		/* Year markers on the rail */
+		.timeline-year {
+			position: relative;
+			height: 20px;
+			display: flex;
+			align-items: center;
+		}
+
+		.timeline-year-badge {
+			position: absolute;
+			left: 7px;
+			transform: translateX(-50%);
+			font-size: 0.65rem;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.18em;
+			color: var(--accent-strong);
+			background: var(--bg);
+			border: 1px solid var(--accent-line);
+			border-radius: 999px;
+			padding: 2px 10px;
+			z-index: 2;
+			white-space: nowrap;
 		}
 
 		.timeline-item {
 			position: relative;
-		}
-
-		.timeline-row {
-			display: grid;
-			grid-template-columns: 300px 1fr;
-			gap: 30px;
-			padding-left: 34px;
 		}
 
 		.timeline-dot {
@@ -1195,7 +1257,15 @@
 			border-radius: 50%;
 			background: var(--accent);
 			border: 3px solid var(--bg);
-			box-shadow: 0 0 0 4px var(--accent-soft);
+			animation: dot-pulse 3.5s cubic-bezier(0.4,0,0.6,1) infinite;
+			z-index: 1;
+		}
+
+		.timeline-row {
+			display: grid;
+			grid-template-columns: 260px 1fr;
+			gap: 30px;
+			padding-left: 34px;
 		}
 
 		.timeline-info {
@@ -1233,29 +1303,39 @@
 			color: var(--text-muted);
 		}
 
+		/* Detail card — double-bezel */
+		.timeline-details-shell {
+			background: rgba(91,157,255,0.04);
+			border: 1px solid rgba(255,255,255,0.06);
+			border-radius: calc(var(--radius) + 4px);
+			padding: 3px;
+		}
+
 		.timeline-details {
 			background: var(--surface);
 			border: 1px solid var(--border);
 			border-radius: var(--radius);
-			padding: 24px 28px;
-			transition: border-color 0.4s var(--ease);
+			padding: 22px 26px;
+			box-shadow: inset 0 1px 1px rgba(255,255,255,0.04);
+			transition: border-color 0.5s cubic-bezier(0.16,1,0.3,1);
 		}
 
-		.timeline-item:hover .timeline-details {
+		.timeline-details-shell:hover .timeline-details {
 			border-color: var(--accent-line);
 		}
 
 		.job-description ul {
 			list-style: none;
 			display: grid;
-			gap: 12px;
+			gap: 10px;
 		}
 
 		.job-description li {
 			position: relative;
-			padding-left: 22px;
+			padding-left: 20px;
 			color: var(--text-muted);
-			font-size: 0.93rem;
+			font-size: 0.92rem;
+			line-height: 1.65;
 		}
 
 		.job-description li::before {
@@ -1520,7 +1600,7 @@
 
 			.timeline-row {
 				grid-template-columns: 1fr;
-				gap: 16px;
+				gap: 14px;
 			}
 		}
 
@@ -1960,159 +2040,153 @@
 			<p class="section-subtitle">My professional journey across startups and large enterprises.</p>
 			<div class="timeline">
 
+		<div class="timeline-year"><span class="timeline-year-badge">2026</span></div>
+
 			<div class="timeline-item">
 				<div class="timeline-dot"></div>
 				<div class="timeline-row">
 					<div class="timeline-info">
 						<div class="timeline-meta">
-							<h3 class="job-title eplus">Data Scientist</h3>
-							<h4 class="job-company eplus">
+							<h3 class="job-title">Data Scientist</h3>
+							<h4 class="job-company">
 								<img src="https://www.google.com/s2/favicons?domain=eplus.vn&sz=64"
 									alt="Eplus Logo" class="company-logo" onerror="this.style.display='none'">
 								Eplus Research
-								</h4>
-								<p class="job-period">Jan 2026 - Current</p>
-							</div>
+							</h4>
+							<p class="job-period">Jan 2026 – Current</p>
 						</div>
+					</div>
+					<div class="timeline-details-shell">
 						<div class="timeline-details">
 							<div class="job-description">
 								<ul>
-									<li>Strategic Pharmacy Segmentation: Engineered a data-driven scoring engine utilizing advanced clustering to segment
-										12,000+ pharmacies. This intelligence enabled the business team to launch targeted commercial strategies, driving a 12%
-										increase in Gross Merchandise Value (GMV) among newly onboarded partners.</li>
-									<li>Vaccine Recommendation Engine: Engineered a personalized recommendation engine for VNVC voucher holders to
-										predict and suggest "next-dose" vaccines. This automated solution drove a 5% increase in voucher redemption rates
-										through targeted, model-driven SMS triggers.</li>
-									<li>ML pipelines: Designed and scheduled robust data pipelines and DAGs using dbt and Airflow to automate feature
-										extraction, significantly reducing data latency and ensuring high-quality, reliable inputs for production ML models.</li>
-									<li>Model Monitoring & Analytics: Built comprehensive tracking dashboards in Power BI to monitor model performance
-										metrics, segment drift, and downstream business KPIs, translating complex model outputs into actionable insights for
-										cross-functional stakeholders.</li>
+									<li>Strategic Pharmacy Segmentation: Engineered a data-driven scoring engine utilizing advanced clustering to segment 12,000+ pharmacies, driving a 12% increase in GMV among newly onboarded partners.</li>
+									<li>Vaccine Recommendation Engine: Built a personalized next-dose recommendation engine for VNVC voucher holders, driving a 5% increase in voucher redemption via model-driven SMS triggers.</li>
+									<li>ML Pipelines: Designed and scheduled data pipelines and DAGs using dbt and Airflow to automate feature extraction, reducing data latency and ensuring reliable inputs for production ML models.</li>
+									<li>Model Monitoring: Built Power BI dashboards to track model performance, segment drift, and downstream business KPIs for cross-functional stakeholders.</li>
 								</ul>
 							</div>
 						</div>
 					</div>
 				</div>
+			</div>
+
+			<div class="timeline-year"><span class="timeline-year-badge">2023 – 2026</span></div>
 
 			<div class="timeline-item">
 				<div class="timeline-dot"></div>
 				<div class="timeline-row">
 					<div class="timeline-info">
 						<div class="timeline-meta">
-							<h3 class="job-title grab">Data Analyst</h3>
-							<h4 class="job-company grab">
+							<h3 class="job-title">Data Analyst</h3>
+							<h4 class="job-company">
 								<img src="https://cdn.simpleicons.org/grab/00B14F"
 									alt="Grab Logo" class="company-logo" onerror="this.src='https://www.google.com/s2/favicons?domain=grab.com&sz=64';this.onerror=null">
 								Grab
-								</h4>
-								<p class="job-period">Nov 2023 - Jan 2026</p>
-							</div>
+							</h4>
+							<p class="job-period">Nov 2023 – Jan 2026</p>
 						</div>
+					</div>
+					<div class="timeline-details-shell">
 						<div class="timeline-details">
 							<div class="job-description">
 								<ul>
-									<li>Machine Learning & Forecasting: Delivered a detection model for safety equipment (e.g., missing gear detection),
-										achieving ~92% precision, and a forecasting model for Gross Merchandise Value (GMV) with ~4% MAPE. Outputs were
-										automated and written into a team-managed delta table for business visibility.</li>
-									<li>Data Engineering & Automation:  Developed and scheduled data pipelines in Databricks using SQL (Presto/Trino), PySpark,
-										and Python to streamline reporting and analytics. Automated workflows to support high-volume data processes and
-										reduce manual intervention.</li>
-									<li>Data Quality & Reliability: Implemented robust data quality checks and source
-										validation mechanisms, significantly improving consistency and reducing the need
-										for manual preprocessing in downstream workflows.</li>
-									<li>Data Visualization & Reporting: Designed Power BI dashboards for regional
-										performance reviews, enabling data-driven decisions across teams. Enhanced
-										reporting efficiency by automating processes, reducing manual effort by over
-										70%.</li>
-									<li>Cross-functional Collaboration: Partnered with Finance, Operations, and Strategy
-										teams to identify challenges and deliver impactful data solutions (ad-hoc
-										analyses, insights, and dashboards).</li>
+									<li>ML & Forecasting: Delivered a safety equipment detection model (~92% precision) and a GMV forecasting model (~4% MAPE), with outputs automated into a team-managed delta table.</li>
+									<li>Data Engineering: Developed and scheduled data pipelines in Databricks using SQL (Presto/Trino), PySpark, and Python, reducing manual intervention across high-volume workflows.</li>
+									<li>Data Quality: Implemented robust quality checks and source validation, improving consistency and reducing manual preprocessing in downstream pipelines.</li>
+									<li>BI & Reporting: Designed Power BI dashboards for regional performance reviews, automating reporting processes and reducing manual effort by 70%+.</li>
+									<li>Cross-functional: Partnered with Finance, Operations, and Strategy teams to deliver impactful ad-hoc analyses and dashboards.</li>
 								</ul>
 							</div>
 						</div>
 					</div>
 				</div>
+			</div>
+
+			<div class="timeline-year"><span class="timeline-year-badge">2023</span></div>
 
 			<div class="timeline-item">
 				<div class="timeline-dot"></div>
 				<div class="timeline-row">
 					<div class="timeline-info">
 						<div class="timeline-meta">
-							<h3 class="job-title unilever">Data Science Intern</h3>
-							<h4 class="job-company unilever">
+							<h3 class="job-title">Data Science Intern</h3>
+							<h4 class="job-company">
 								<img src="https://cdn.simpleicons.org/unilever/1F36C7"
 									alt="Unilever Logo" class="company-logo" onerror="this.src='https://www.google.com/s2/favicons?domain=unilever.com&sz=64';this.onerror=null">
 								Unilever
-								</h4>
-								<p class="job-period">Oct - Nov 2023</p>
-							</div>
+							</h4>
+							<p class="job-period">Oct – Nov 2023</p>
 						</div>
+					</div>
+					<div class="timeline-details-shell">
 						<div class="timeline-details">
 							<div class="job-description">
 								<ul>
-									<li>Built machine learning models for demand sensing to improve sales forecast
-										accuracy.</li>
-									<li>Engineered time series features and evaluated model performance using real-world
-										FMCG data.</li>
+									<li>Built machine learning models for demand sensing to improve sales forecast accuracy.</li>
+									<li>Engineered time series features and evaluated model performance using real-world FMCG data.</li>
 								</ul>
 							</div>
 						</div>
 					</div>
 				</div>
+			</div>
 
 			<div class="timeline-item">
 				<div class="timeline-dot"></div>
 				<div class="timeline-row">
 					<div class="timeline-info">
 						<div class="timeline-meta">
-							<h3 class="job-title fwd">Data Science Internship</h3>
-							<h4 class="job-company fwd">
+							<h3 class="job-title">Data Science Intern</h3>
+							<h4 class="job-company">
 								<img src="https://www.google.com/s2/favicons?domain=fwd.com.vn&sz=64"
 									alt="FWD Insurance Logo" class="company-logo" onerror="this.style.display='none'">
 								FWD Insurance
-								</h4>
-								<p class="job-period">Jun - Aug 2023</p>
-							</div>
+							</h4>
+							<p class="job-period">Jun – Aug 2023</p>
 						</div>
+					</div>
+					<div class="timeline-details-shell">
 						<div class="timeline-details">
 							<div class="job-description">
 								<ul>
-									<li>Supported the development of machine learning models to detect potential claim
-										fraud.</li>
-									<li>Built dashboards in Power BI and conducted EDA on claims data to support
-										underwriting decisions.</li>
+									<li>Supported development of ML models to detect potential insurance claim fraud.</li>
+									<li>Built Power BI dashboards and conducted EDA on claims data to support underwriting decisions.</li>
 								</ul>
 							</div>
 						</div>
 					</div>
 				</div>
+			</div>
+
+			<div class="timeline-year"><span class="timeline-year-badge">2022</span></div>
 
 			<div class="timeline-item">
 				<div class="timeline-dot"></div>
 				<div class="timeline-row">
 					<div class="timeline-info">
 						<div class="timeline-meta">
-							<h3 class="job-title logivan">Data Analyst Intern</h3>
-							<h4 class="job-company logivan">
+							<h3 class="job-title">Data Analyst Intern</h3>
+							<h4 class="job-company">
 								<img src="https://www.google.com/s2/favicons?domain=logivan.com&sz=64"
 									alt="Logivan Logo" class="company-logo" onerror="this.style.display='none'">
 								Logivan
-								</h4>
-								<p class="job-period">Jun - Dec 2022</p>
-							</div>
+							</h4>
+							<p class="job-period">Jun – Dec 2022</p>
 						</div>
+					</div>
+					<div class="timeline-details-shell">
 						<div class="timeline-details">
 							<div class="job-description">
 								<ul>
-									<li>Built dashboards in Holistics (BI Platform) for shipment tracking and partner
-										performance.</li>
-									<li>Analyzed logistics data to improve route efficiency and reduce delivery delays.
-									</li>
+									<li>Built dashboards in Holistics (BI Platform) for shipment tracking and partner performance.</li>
+									<li>Analyzed logistics data to improve route efficiency and reduce delivery delays.</li>
 								</ul>
 							</div>
 						</div>
 					</div>
 				</div>
+			</div>
 
 			</div>
 		</section>
@@ -2344,7 +2418,19 @@
 			navbar.classList.toggle('scrolled', window.scrollY > 30);
 		}, { passive: true });
 
-		// Active nav link + scroll reveal via IntersectionObserver
+		// Timeline line draw animation
+	const timeline = document.querySelector('.timeline');
+	if (timeline) {
+		const lineObserver = new IntersectionObserver(([entry]) => {
+			if (entry.isIntersecting) {
+				timeline.classList.add('line-drawn');
+				lineObserver.disconnect();
+			}
+		}, { threshold: 0.1 });
+		lineObserver.observe(timeline);
+	}
+
+	// Active nav link + scroll reveal via IntersectionObserver
 		const navLinks = document.querySelectorAll('.nav-link');
 		const sectionEls = document.querySelectorAll('section[id]');
 
